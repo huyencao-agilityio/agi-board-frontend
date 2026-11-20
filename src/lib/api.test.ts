@@ -41,13 +41,16 @@ describe('api', () => {
   it('throws ApiError with status and body on failure', async () => {
     server.use(
       http.get(`${API}/auth/me`, () =>
-        HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 }),
+        HttpResponse.json(
+          { error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } },
+          { status: 401 },
+        ),
       ),
     )
 
     const error = await api('/auth/me').catch((e: unknown) => e)
     expect(error).toBeInstanceOf(ApiError)
-    expect(error).toMatchObject({ status: 401, body: { code: 'UNAUTHORIZED' } })
+    expect(error).toMatchObject({ status: 401, body: { error: { code: 'UNAUTHORIZED' } } })
   })
 
   it('accepts an empty response body', async () => {
