@@ -20,6 +20,7 @@ Lint is oxlint (`.oxlintrc.json`). It enforces `rules-of-hooks` only: there is n
 ## Review priorities
 
 ### CRITICAL: security (see `.claude/rules/security.md`)
+
 - `fetch` / `XMLHttpRequest` called directly instead of through `api()` in `src/lib/api.ts`, which sends cookies and the CSRF header.
 - Token, session id or user data stored in `localStorage`, `sessionStorage` or IndexedDB.
 - Logout not `POST`, or logout that does not call `queryClient.clear()`.
@@ -30,10 +31,12 @@ Lint is oxlint (`.oxlintrc.json`). It enforces `rules-of-hooks` only: there is n
 - Permission logic the client treats as enforcement: the client may only hide or disable controls.
 
 ### CRITICAL: hooks and state
+
 - Conditional hook call, or a hook called outside a component or custom hook.
 - Direct state mutation (`arr.push`, `obj.x = 1; setObj(obj)`), including mutating TanStack Query cache data in place.
 
 ### HIGH: project conventions (see `.claude/rules/react.md`, `ui.md`, `code-style.md`)
+
 - Server state outside TanStack Query, or query/mutation hooks outside the feature's `hooks.ts`; a mutation that leaves stale data (missing invalidation or cache update).
 - A feature importing another feature's components or internals instead of its public hooks.
 - Hand edits under `src/components/ui/` (shadcn-generated).
@@ -46,6 +49,7 @@ Lint is oxlint (`.oxlintrc.json`). It enforces `rules-of-hooks` only: there is n
 - Anything listed as out of scope in `../docs/proposal/proposal.md` (also no dark mode, no i18n).
 
 ### HIGH: hook correctness
+
 - Missing or wrong dependency in `useEffect` / `useMemo` / `useCallback`.
 - Effect used for derived state (compute during render instead), or an effect chain (effect sets state that triggers another effect).
 - Effect without cleanup for subscriptions, timers, listeners, `AbortController`, or the board WebSocket (`useBoardSocket`).
@@ -53,20 +57,24 @@ Lint is oxlint (`.oxlintrc.json`). It enforces `rules-of-hooks` only: there is n
 - Prop-derived state without a `key` reset.
 
 ### HIGH: TypeScript
+
 - `any`, non-null `!`, or `as` casts that hide a real type mismatch; untyped API responses.
 - Unhandled promise (floating `async` call, mutation without error handling where the user needs feedback).
 
 ### HIGH: accessibility
+
 - Clickable `div`/`span` instead of `<button>` or a link; no keyboard path.
 - Input without a label; icon-only button without an accessible name; `<img>` without `alt`.
 - ARIA that contradicts native semantics or is missing `aria-expanded` / `aria-controls` on disclosures.
 - Color as the only signal; skipped heading levels; `target="_blank"` without `rel="noopener noreferrer"`.
 
 ### HIGH: tests (see `.claude/rules/testing.md`)
+
 - New logic, a bug fix, or a changed user flow with no test, or a test that cannot fail.
 - Route, guard, auth or `src/lib/api.ts` change without an e2e check (`pnpm e2e`); note it if you could not run it.
 
 ### MEDIUM: rendering, forms, performance
+
 - `key={index}` on a list that can reorder, insert or delete; duplicated state.
 - Forms not built with react-hook-form + zod, missing `<form>`, or a schema that differs from server limits stated in the spec.
 - Heavy work in render, or memoization added without a reason.
@@ -77,6 +85,7 @@ Lint is oxlint (`.oxlintrc.json`). It enforces `rules-of-hooks` only: there is n
 Group findings by severity (CRITICAL, HIGH, MEDIUM). For each: `file:line`, the issue, why it matters (cite the rule file when one applies), and the fix in one or two sentences. Then list the check results (lint/typecheck/test/e2e: passed, failed, or not run).
 
 Verdict:
+
 - Approve: no CRITICAL or HIGH.
 - Warning: MEDIUM only.
 - Block: any CRITICAL or HIGH.

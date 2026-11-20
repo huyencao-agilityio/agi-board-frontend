@@ -6,10 +6,10 @@ paths:
 
 # Testing
 
-| Layer     | Files                             | Command     | API                                                |
-| --------- | --------------------------------- | ----------- | -------------------------------------------------- |
-| Unit/comp | `src/**/*.test.{ts,tsx}`, next to code | `pnpm test` | MSW (`src/test/server.ts`), unhandled requests fail |
-| E2E       | `e2e/*.spec.ts`                   | `pnpm e2e`  | mocked per test with `page.route` on `http://api.e2e` |
+| Layer     | Files                                  | Command     | API                                                   |
+| --------- | -------------------------------------- | ----------- | ----------------------------------------------------- |
+| Unit/comp | `src/**/*.test.{ts,tsx}`, next to code | `pnpm test` | MSW (`src/test/server.ts`), unhandled requests fail   |
+| E2E       | `e2e/*.spec.ts`                        | `pnpm e2e`  | mocked per test with `page.route` on `http://api.e2e` |
 
 Before saying a task is done: `pnpm lint && pnpm typecheck && pnpm test`, plus `pnpm e2e` when routes, guards or the auth flow changed.
 
@@ -24,7 +24,7 @@ Before saying a task is done: `pnpm lint && pnpm typecheck && pnpm test`, plus `
 ## Component tests (Vitest + Testing Library)
 
 - Render with a fresh `QueryClient` per test (`retry: false`) and a memory router when the component uses routing; do not share the app's `queryClient`.
-- Mock the network with `server.use(http.get(\`${import.meta.env.VITE_API_BASE_URL}/...\`, ...))`, never by mocking `api()` or `fetch`. Return the backend envelope (`{ error: { code, message } }`) for errors.
+- Mock the network with `server.use(http.get(\`${import.meta.env.VITE_API_BASE_URL}/...\`, ...))`, never by mocking `api()`or`fetch`. Return the backend envelope (`{ error: { code, message } }`) for errors.
 - Query by role and accessible name (`getByRole('button', { name: 'Create board' })`), then label, then text. No `data-testid` unless nothing accessible exists, no CSS selectors.
 - Interact with `userEvent`, not `fireEvent`. Await `findBy*` for async UI; no manual `setTimeout` waits.
 - Assert what the user sees and the requests sent (method, body, CSRF header on writes). No snapshot tests.

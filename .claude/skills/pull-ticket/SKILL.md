@@ -1,7 +1,7 @@
 ---
 name: pull-ticket
 description: Reads one Trello card from the "AGI Board" board (by card number such as 123 or a trello.com/c/ URL) and analyses it for this React SPA. Writes tasks/<number>/issue.md (the card, structured) and tasks/<number>/analysis.md (screens, routes, feature files, API/query hooks, permissions UI, tests, scope size, gaps, next speckit step). Use whenever the user wants to pull, read, fetch, analyse or start work on a Trello ticket/card/task in the frontend, or says "/pull-ticket 123", "đọc ticket 45", "phân tích card này", even if they don't say "analysis".
-argument-hint: "<card number | trello card URL>"
+argument-hint: '<card number | trello card URL>'
 ---
 
 # Pull a Trello ticket (frontend)
@@ -104,29 +104,29 @@ Copy card text verbatim (same language, same wording). Convert UTC dates to the 
 
 Read `AGENTS.md` and `.claude/rules/` (`react.md`, `ui.md`, `security.md`, `testing.md`) before mapping; they are the conventions this map must follow. Look at the existing code under `src/features/` and `src/app/router.tsx` so you mark files as MODIFY vs NEW correctly (many pages already exist as placeholders).
 
-| Card needs | Frontend impact |
-|---|---|
-| New screen | `src/features/<feature>/pages/<Name>Page.tsx` starting with `// <ID> <Name>`, route in `src/app/router.tsx` with the screen ID comment |
-| Dialog (`WEB-Dxx`) | Component in `src/features/<feature>/components/`, opened from a page, not a route |
-| Server data | Request functions in `api.ts` via `api()` from `src/lib/api.ts`; `useQuery`/`useMutation` in `hooks.ts`; query keys start with the resource (`['boards', boardId, …]`) |
-| Mutation | `invalidateQueries` on the keys it changes; optimistic update only where the spec needs instant feedback |
-| Form | `react-hook-form` + zod schema; limits match the spec and the backend DTO |
-| Auth gating | Existing guards in `src/app/guards.tsx` (`RequireAuth`, `RequireGuest`, `RequireSystemRole`) |
-| Permission-dependent controls | Hide/disable only; the server enforces. 403/404 → WEB-13 via `RouteError` |
-| Board real-time | `useBoardSocket` (`src/lib/ws.ts`); no extra socket |
-| Shared UI | `src/components/common/`; shadcn parts added with `pnpm dlx shadcn@latest add <name>`, colors only from tokens |
-| Labels / messages | Copied verbatim from the spec/screen file; if missing, it is a gap |
-| Any of the above | Unit/component tests (MSW in `src/test/server.ts`); `e2e/*.spec.ts` when routes, guards, auth or `src/lib/api.ts` change |
+| Card needs                    | Frontend impact                                                                                                                                                        |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New screen                    | `src/features/<feature>/pages/<Name>Page.tsx` starting with `// <ID> <Name>`, route in `src/app/router.tsx` with the screen ID comment                                 |
+| Dialog (`WEB-Dxx`)            | Component in `src/features/<feature>/components/`, opened from a page, not a route                                                                                     |
+| Server data                   | Request functions in `api.ts` via `api()` from `src/lib/api.ts`; `useQuery`/`useMutation` in `hooks.ts`; query keys start with the resource (`['boards', boardId, …]`) |
+| Mutation                      | `invalidateQueries` on the keys it changes; optimistic update only where the spec needs instant feedback                                                               |
+| Form                          | `react-hook-form` + zod schema; limits match the spec and the backend DTO                                                                                              |
+| Auth gating                   | Existing guards in `src/app/guards.tsx` (`RequireAuth`, `RequireGuest`, `RequireSystemRole`)                                                                           |
+| Permission-dependent controls | Hide/disable only; the server enforces. 403/404 → WEB-13 via `RouteError`                                                                                              |
+| Board real-time               | `useBoardSocket` (`src/lib/ws.ts`); no extra socket                                                                                                                    |
+| Shared UI                     | `src/components/common/`; shadcn parts added with `pnpm dlx shadcn@latest add <name>`, colors only from tokens                                                         |
+| Labels / messages             | Copied verbatim from the spec/screen file; if missing, it is a gap                                                                                                     |
+| Any of the above              | Unit/component tests (MSW in `src/test/server.ts`); `e2e/*.spec.ts` when routes, guards, auth or `src/lib/api.ts` change                                               |
 
 A card may be backend-only. Then write Scope `NONE (backend only)`, note which screens will use the new API later, and stop there.
 
 ## 6. Size
 
-| Size | Criteria | Next step |
-|---|---|---|
-| **SMALL** | ≤ 2 files, existing page/feature, no new route or API | implement directly |
-| **MEDIUM** | one feature, new components/hooks, ≤ 5 files, no route or auth change | `/speckit-plan` |
-| **LARGE** | new screen(s)/routes, auth or guard change, several features, or > 5 files | `/speckit-specify` (or `/speckit-plan` if the linked spec is already complete) |
+| Size       | Criteria                                                                   | Next step                                                                      |
+| ---------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **SMALL**  | ≤ 2 files, existing page/feature, no new route or API                      | implement directly                                                             |
+| **MEDIUM** | one feature, new components/hooks, ≤ 5 files, no route or auth change      | `/speckit-plan`                                                                |
+| **LARGE**  | new screen(s)/routes, auth or guard change, several features, or > 5 files | `/speckit-specify` (or `/speckit-plan` if the linked spec is already complete) |
 
 ## 7. Gaps
 
@@ -154,28 +154,28 @@ If a **critical** gap remains (route/screen, API contract, or permission behavio
 
 ## Screens & routes
 
-| Screen ID | Route / opened from | Guard | Status |
-|-----------|---------------------|-------|--------|
-| WEB-07 | `/b/:boardId` | `RequireAuth` | exists (placeholder) / NEW / MODIFY |
+| Screen ID | Route / opened from | Guard         | Status                              |
+| --------- | ------------------- | ------------- | ----------------------------------- |
+| WEB-07    | `/b/:boardId`       | `RequireAuth` | exists (placeholder) / NEW / MODIFY |
 
 ## API used
 
-| Method | Path | Query key | Exists in backend? |
-|--------|------|-----------|--------------------|
-| GET | `/boards/:boardId` | `['boards', boardId]` | YES / NO / unknown |
+| Method | Path               | Query key             | Exists in backend? |
+| ------ | ------------------ | --------------------- | ------------------ |
+| GET    | `/boards/:boardId` | `['boards', boardId]` | YES / NO / unknown |
 
 ## Architecture Map
 
-| Layer | File | Action |
-|-------|------|--------|
-| Route | `src/app/router.tsx` | MODIFY / NO CHANGE |
-| Page | `src/features/<feature>/pages/<Name>Page.tsx` | NEW / MODIFY / NO CHANGE |
+| Layer                | File                                           | Action                   |
+| -------------------- | ---------------------------------------------- | ------------------------ |
+| Route                | `src/app/router.tsx`                           | MODIFY / NO CHANGE       |
+| Page                 | `src/features/<feature>/pages/<Name>Page.tsx`  | NEW / MODIFY / NO CHANGE |
 | Components / dialogs | `src/features/<feature>/components/<Name>.tsx` | NEW / MODIFY / NO CHANGE |
-| API functions | `src/features/<feature>/api.ts` | NEW / MODIFY / NO CHANGE |
-| Query hooks | `src/features/<feature>/hooks.ts` | NEW / MODIFY / NO CHANGE |
-| Shared | `src/components/common/` / `src/lib/` | NEW / MODIFY / NO CHANGE |
-| Tests | `*.test.tsx` next to the code | NEW / MODIFY |
-| E2E | `e2e/<flow>.spec.ts` | NEW / MODIFY / NO CHANGE |
+| API functions        | `src/features/<feature>/api.ts`                | NEW / MODIFY / NO CHANGE |
+| Query hooks          | `src/features/<feature>/hooks.ts`              | NEW / MODIFY / NO CHANGE |
+| Shared               | `src/components/common/` / `src/lib/`          | NEW / MODIFY / NO CHANGE |
+| Tests                | `*.test.tsx` next to the code                  | NEW / MODIFY             |
+| E2E                  | `e2e/<flow>.spec.ts`                           | NEW / MODIFY / NO CHANGE |
 
 ## UI states
 
