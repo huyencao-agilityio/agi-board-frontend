@@ -36,15 +36,20 @@ UI labels and messages are English and copied verbatim from the spec. Do not inv
 
 ## Git workflow
 
-- Every change belongs to one Trello card; its number (`#123`) is the ticket ID.
-- Commit subject: `<type>(<scope>): #<id> <Imperative summary>`, e.g. `feat(boards): #123 Add route guards`. Types: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `style`, `build`, `ci`, `chore`, `revert`; scope is lowercase (feature or area, e.g. `auth`, `boards`, `deps`). The guard hook denies other formats. If the card number is unknown, ask the user.
+Same conventions as `agi-board-backend`.
+
+- Every change belongs to one Trello card (board "AGI Board"); its number (`#123`) is the ticket ID.
+- Branches: `main` (production) ← `develop` ← work branches named `<type>/<kebab-slug>`, e.g. `feat/init-structure`, `fix/board-404`. Types: `feat`, `fix`, `chore`, `refactor`, `test`, `docs`, `build`, `ci`, `perf`, `hotfix`, `release`. Branch from `develop` and open the PR into `develop`. Check a new branch name with `sh scripts/check-branch-name.sh <name>` before the first push.
+- Commit subject: `<type>(<scope>): #<id> <Imperative summary>`, e.g. `feat(boards): #123 Add route guards`. Types and rules are in `commitlint.config.mjs` (scope required, lowercase; summary starts with a capital letter; header ≤ 100 chars). If the card number is unknown, ask the user.
+- Enforced by husky: `commit-msg` runs commitlint, `pre-push` checks the branch name; CI re-checks both on every PR. Never bypass them with `--no-verify`.
+- Renaming a branch that already heads an open PR closes that PR on GitHub; ask the user first.
 - Pull/merge requests: use the `create-pr` skill. Title = the Trello card name exactly; description = Ticket link / What / Why / How tested / Screenshots / Risk.
 
 ## Claude Code hooks
 
 `.claude/settings.json` runs two hooks (Node scripts in `.claude/hooks/`):
 
-- `guard.mjs` (PreToolUse): denies force push, pushes or deletes on protected branches (`main`, `master`, `develop`, `staging`, `production`), history rewrites, commits not in the `<type>(<scope>): #<id> <summary>` format, dangerous shell commands, touching `.env*` / `.dev.vars` / keys, and hand edits of `pnpm-lock.yaml`. Asks first for local data loss (`reset --hard`, `clean -f`, discard changes, rebase, amend), deploys, and edits of shared config, `.claude/`, `.github/`, `src/components/ui/`, `tokens.css`.
+- `guard.mjs` (PreToolUse): denies force push, pushes or deletes on protected branches (`main`, `master`, `develop`, `staging`, `production`), history rewrites, `--no-verify`, dangerous shell commands, touching `.env*` / `.dev.vars` / keys, and hand edits of `pnpm-lock.yaml`. Asks first for local data loss (`reset --hard`, `clean -f`, discard changes, rebase, amend), deploys, and edits of shared config, `.claude/`, `.github/`, `src/components/ui/`, `tokens.css`.
 - `format.mjs` (PostToolUse): runs the project's Prettier on each file written or edited.
 
 If a guard decision is wrong, fix the rule in `guard.mjs`, add a case to `guard.test.mjs`, and run `pnpm test:hooks`. Do not work around a deny.

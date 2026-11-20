@@ -6,19 +6,6 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-const COMMIT_TYPES = [
-  'feat',
-  'fix',
-  'refactor',
-  'perf',
-  'test',
-  'docs',
-  'style',
-  'build',
-  'ci',
-  'chore',
-  'revert',
-]
 const PROTECTED_BRANCHES = ['main', 'master', 'develop', 'staging', 'production']
 const BRANCH = `(?:origin\\/)?(?:${PROTECTED_BRANCHES.join('|')})`
 
@@ -65,8 +52,8 @@ const BASH_RULES = [
   [/\bgit\s+commit\b.*--amend\b/, 'ask', 'Amending rewrites the last commit; confirm first.'],
   [
     /\bgit\s+(commit|push|merge|rebase)\b.*--no-verify\b/,
-    'ask',
-    '--no-verify skips repository checks.',
+    'deny',
+    '--no-verify skips commitlint and the branch-name check (husky hooks).',
   ],
   // Destructive shell
   [
@@ -182,21 +169,6 @@ export function check(input, projectDir = process.cwd(), currentBranch = '') {
       return {
         decision: 'deny',
         reason: `You are on ${currentBranch}; push a feature branch and open a PR.`,
-      }
-    }
-    // Team rule: "<type>(<scope>): #<card number> <Imperative summary>", e.g. "feat(boards): #123 Add route guards".
-    const commit = cmd.match(/\bgit\s+commit\b([\s\S]*)/)
-    if (
-      commit &&
-      !/\s(--no-edit|--fixup|--squash|-F|--file|-C|--reuse-message)\b/.test(commit[1])
-    ) {
-      const MESSAGE_START = String.raw`\s(-[a-zA-Z]*m|--message)(=|\s+)("\$\(cat\s+<<-?\s*['"]?EOF['"]?\s*\n|["'])\s*`
-      const SUBJECT = String.raw`(${COMMIT_TYPES.join('|')})\([a-z0-9][a-z0-9-]*\)!?: #\d+ [A-Za-z]`
-      if (!new RegExp(MESSAGE_START + SUBJECT).test(commit[1])) {
-        return {
-          decision: 'deny',
-          reason: `Commit subject must be "<type>(<scope>): #<card number> <Imperative summary>", e.g. git commit -m "feat(boards): #123 Add route guards". Types: ${COMMIT_TYPES.join(', ')}. Ask the user for the Trello card number if unknown.`,
-        }
       }
     }
     // Pipe-aware rules (curl | sh) need the whole command; the rest run per segment.

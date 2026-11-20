@@ -48,6 +48,12 @@ e2e/            Playwright tests
 
 Route ↔ screen table and decisions: `docs/frontend-init-plan.md` in the parent `agi-board` repo.
 
+## Git conventions
+
+- Branches: `<type>/<kebab-slug>` from `develop`, e.g. `feat/init-structure`, `fix/board-404` (`scripts/check-branch-name.sh`, run on `pre-push`).
+- Commits: `<type>(<scope>): #<trello-card> <Imperative summary>`, e.g. `feat(boards): #123 Add route guards` (`commitlint.config.mjs`, run on `commit-msg`).
+- Hooks are installed by husky on `pnpm install`. CI checks both on every PR.
+
 ## CI/CD
 
 `.github/workflows/ci.yml` runs lint, format check, typecheck, unit and E2E tests on every PR. On merge to `main` it builds and deploys to staging. Repository settings needed:

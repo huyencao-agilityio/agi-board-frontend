@@ -5,7 +5,7 @@ description: Creates a pull request (GitHub) or merge request (GitLab) for this 
 
 # Create a PR / MR
 
-Every PR/MR is tied to one Trello card. The card number (`#123`, the number Trello shows on the card) is the ticket ID used everywhere: branch, commits (`feat(boards): #123 Add route guards`), PR title source and the Ticket link.
+Every PR/MR is tied to one Trello card. The card number (`#123`, the number Trello shows on the card) is the ticket ID used in commits (`feat(boards): #123 Add route guards`), the PR title source and the Ticket link.
 
 ## 1. Find the ticket
 
@@ -13,21 +13,20 @@ Take the card number from, in order:
 
 1. What the user said (`#123`, a Trello card URL).
 2. The commits on this branch: `git log --format=%s <base>..HEAD` and take the `#123` after `<type>(<scope>): `.
-3. The branch name (e.g. `feature/123-board-guards`).
 
 If none gives exactly one number, or different sources disagree, ask the user. Never guess.
 
 ## 2. Read the card from Trello
 
-Use the Trello MCP tools (`trelloReadCard`, `trelloSearch`, `trelloReadBoard`) to find the card with that number and read its **name** and **URL** (`shortUrl`). A card number is unique only inside one board: if the board is not known, ask the user which board (or for the card URL) and use it.
+Use the Trello MCP tools (`trelloReadCard`, `trelloSearch`, `trelloReadBoard`) to find the card with that number on the board **"AGI Board"** and read its **name** and **URL** (`shortUrl`). A card URL from the user can be read directly with `trelloReadCard` (`get`).
 
 If Trello is not connected or the card cannot be found, stop and ask the user for the card name and URL. Do not invent them.
 
 ## 3. Check the branch before opening
 
-- Base branch: the repo default (`main`) unless the user says otherwise.
-- Never open a PR from `main`/`master` or another protected branch; create a feature branch first.
-- Every commit subject on the branch must be `<type>(<scope>): #<number> <Imperative summary>` with this card's number (team rule). If one does not, tell the user and offer to fix it instead of opening the PR.
+- Base branch: `develop` unless the user says otherwise (`main` only receives release/hotfix PRs).
+- Never open a PR from `main`, `develop` or another protected branch. The head branch must pass `sh scripts/check-branch-name.sh` (`<type>/<kebab-slug>`, e.g. `feat/init-structure`); if it does not, tell the user before pushing. Renaming a branch that already heads an open PR closes that PR, so ask first.
+- Every commit on the branch must pass commitlint with this card's number: `pnpm exec commitlint --from <base> --to HEAD`. If one does not, tell the user and offer to fix it instead of opening the PR.
 - Run `pnpm lint && pnpm typecheck && pnpm test` and use the real results in "How tested". If something fails, say so; do not hide it.
 - Push the branch (no force push).
 

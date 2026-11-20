@@ -23,6 +23,8 @@ test('git: force push and protected branches are denied', () => {
     'git push origin :production',
     'git branch -D main',
     'git filter-branch --tree-filter x',
+    'git commit --no-verify -m "fix(ui): #1 Fix x"',
+    'git push --no-verify',
     'pnpm test && git push --force',
   ])
     assert.equal(bash(c), 'deny', c)
@@ -57,7 +59,6 @@ test('git: local data loss needs confirmation', () => {
     'git branch -D old-feature',
     'git rebase main',
     'git commit --amend --no-edit',
-    'git commit --no-verify -m "fix(ui): #1 Fix x"',
   ])
     assert.equal(bash(c), 'ask', c)
 })
@@ -149,31 +150,4 @@ test('files: shared config needs confirmation, source code passes', () => {
   ]) {
     assert.equal(edit(f), 'allow', f)
   }
-})
-
-test('commits follow <type>(<scope>): #<id> <Imperative summary>', () => {
-  for (const c of [
-    'git commit -m "feat(boards): #123 Add route guards"',
-    "git commit -am 'fix(auth): #7 Handle expired session'",
-    'git add . && git commit -m "chore(deps): #45 Add tokens"',
-    'git commit --message="docs(readme): #9 Update setup steps"',
-    'git commit -m "feat(api)!: #10 Rename session endpoint"',
-    'git commit -m "$(cat <<\'EOF\'\nfeat(boards): #123 Add route guards\n\nBody line\nEOF\n)"',
-    'git commit --amend --no-edit',
-    'git commit --fixup HEAD~1',
-  ])
-    assert.equal(bash(c), c.includes('--amend') ? 'ask' : 'allow', c)
-  for (const c of [
-    'git commit -m "Add route guards"',
-    'git commit -m "feat: #123 Add route guards"',
-    'git commit -m "feat(boards): Add route guards"',
-    'git commit -m "feat(boards): Add route guards #123"',
-    'git commit -m "feat(boards) #123 Add route guards"',
-    'git commit -m "feature(boards): #123 Add route guards"',
-    'git commit -m "feat(Boards): #123 Add route guards"',
-    'git commit -m "[#123] Add route guards"',
-    'git commit',
-    'git commit -m "$(cat <<\'EOF\'\nAdd route guards\nEOF\n)"',
-  ])
-    assert.equal(bash(c), 'deny', c)
 })
