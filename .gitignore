@@ -28,3 +28,6 @@ playwright/.cache/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# pull-ticket working notes
+tasks/
