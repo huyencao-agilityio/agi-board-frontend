@@ -103,9 +103,9 @@ Notes:
 
 ## CI/CD
 
-`.github/workflows/ci.yml` runs lint, format check, typecheck, unit and E2E tests on every PR and push. After the checks pass on a push it calls `.github/workflows/deploy.yml`: `develop` → staging (https://staging.agi-board.workers.dev), `main` → production (https://app.agi-board.workers.dev), then a smoke test against the deployed URL.
+`.github/workflows/ci.yml` runs lint, format check, typecheck, unit and E2E tests on every PR and push. After the checks pass on a push it calls `.github/workflows/deploy.yml`: `develop` → staging (https://staging.huyen-cao.workers.dev), `main` → production (https://app.huyen-cao.workers.dev), then a smoke test against the deployed URL.
 
 GitHub → Settings → Environments `staging` and `production` (add required reviewers on `production`), each with:
 
 - Secrets `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit), `CLOUDFLARE_ACCOUNT_ID`
-- Variables `VITE_API_BASE_URL`, `VITE_WS_BASE_URL` (the backend Worker URL), `FRONTEND_URL` (the URL above, for the smoke test)
+- Variables `VITE_API_BASE_URL` (backend Worker URL + `/api/v1`, e.g. `https://agi-board-backend-staging.huyen-cao.workers.dev/api/v1`), `VITE_WS_BASE_URL`, `FRONTEND_URL` (the URL above, for the smoke test)
