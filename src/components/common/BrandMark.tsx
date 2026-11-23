@@ -5,7 +5,7 @@ export default function BrandMark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        'inline-flex size-[30px] items-center justify-center rounded-[8px] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-primary)_80%,white),var(--color-primary))]',
+        'inline-flex size-[30px] items-center justify-center rounded-[8px] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-primary)_80%,var(--color-surface)),var(--color-primary))]',
         className,
       )}
     >

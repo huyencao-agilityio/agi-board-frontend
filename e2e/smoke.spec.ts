@@ -27,3 +27,14 @@ test('opening the app at / goes to a plain /signin without ?next', async ({ page
   await page.goto('/')
   await expect(page).toHaveURL(/\/signin$/)
 })
+
+test('an ended session sends the visitor to Sign in with the signed-out notice', async ({
+  page,
+}) => {
+  await page.route('http://api.e2e/auth/me', (route) =>
+    route.fulfill({ status: 401, json: { error: { code: 'SESSION_ENDED' } } }),
+  )
+  await page.goto('/b/some-board')
+  await expect(page).toHaveURL(/\/signin\?next=%2Fb%2Fsome-board&notice=signed-out$/)
+  await expect(page.getByRole('status')).toHaveText('You were signed out. Sign in again.')
+})

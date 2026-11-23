@@ -23,6 +23,7 @@ function setup(url = '/signin') {
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/" element={<p>Home</p>} />
           <Route path="/verify-email" element={<p>Verify</p>} />
+          <Route path="/b/x" element={<p>Board</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -36,6 +37,51 @@ async function fill(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('SignInPage', () => {
+  it('posts the credentials with the CSRF header and links the email error', async () => {
+    document.cookie = 'csrf_token=tok123'
+    let sent: { body: unknown; csrf: string | null } | undefined
+    server.use(
+      http.post(`${API}/auth/sign-in`, async ({ request }) => {
+        sent = { body: await request.json(), csrf: request.headers.get('X-CSRF-Token') }
+        return HttpResponse.json(RESULT('home'))
+      }),
+    )
+    const user = setup()
+    await user.type(screen.getByLabelText('Email'), 'a@')
+    await user.tab()
+    expect(screen.getByLabelText('Email')).toHaveAccessibleDescription(
+      'Enter a valid email address.',
+    )
+    await user.clear(screen.getByLabelText('Email'))
+    await fill(user)
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(await screen.findByText('Home')).toBeInTheDocument()
+    expect(sent).toEqual({ body: { email: 'a@b.co', password: 'x' }, csrf: 'tok123' })
+    document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  })
+
+  it.each([
+    ['/b/x', 'Board'],
+    ['//evil.com', 'Home'],
+    ['https://evil.com', 'Home'],
+  ])('after sign-in goes to ?next=%s -> %s', async (target, page) => {
+    server.use(http.post(`${API}/auth/sign-in`, () => HttpResponse.json(RESULT('home'))))
+    const user = setup(`/signin?next=${encodeURIComponent(target)}`)
+    await fill(user)
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(await screen.findByText(page)).toBeInTheDocument()
+  })
+
+  it('locks the inputs and shows a busy button while signing in', async () => {
+    server.use(http.post(`${API}/auth/sign-in`, () => new Promise(() => {})))
+    const user = setup()
+    await fill(user)
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(await screen.findByRole('button', { name: 'Signing in' })).toBeDisabled()
+    expect(screen.getByLabelText('Email')).toBeDisabled()
+    expect(screen.getByLabelText('Password')).toBeDisabled()
+  })
+
   it('starts disabled and flags an invalid email', async () => {
     const user = setup()
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeDisabled()
