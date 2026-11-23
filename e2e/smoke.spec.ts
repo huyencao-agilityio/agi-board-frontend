@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test'
 
+test('status page is reachable signed out', async ({ page }) => {
+  await page.route('http://api.e2e/health', (route) => route.fulfill({ json: { status: 'ok' } }))
+  await page.route('http://api.e2e/health/db', (route) => route.fulfill({ json: { status: 'ok' } }))
+  await page.goto('/status')
+  await expect(page.getByText('API: OK')).toBeVisible()
+  await expect(page.getByText('Database: OK')).toBeVisible()
+})
+
 test('signed-out visitor is sent to Sign in', async ({ page }) => {
   await page.route('http://api.e2e/auth/me', (route) => route.fulfill({ status: 401, json: {} }))
   await page.goto('/b/some-board')
