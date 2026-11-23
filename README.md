@@ -103,7 +103,7 @@ Notes:
 
 ## CI/CD
 
-`.github/workflows/ci.yml` runs lint, format check, typecheck, unit and E2E tests on every PR and push. After the checks pass on a push it calls `.github/workflows/deploy.yml`: `develop` → staging (https://staging.huyen-cao.workers.dev), `main` → production (https://app.huyen-cao.workers.dev), then a smoke test against the deployed URL.
+`.github/workflows/ci.yml` runs lint, format check, typecheck, unit and E2E tests on every PR and push. After the checks pass on a push it calls `.github/workflows/deploy.yml`: `develop` → staging (https://agi-board-staging.huyen-cao.workers.dev), `main` → production (https://agi-board-app.huyen-cao.workers.dev), then a smoke test against the deployed URL.
 
 GitHub → Settings → Environments `staging` and `production` (add required reviewers on `production`), each with:
 
