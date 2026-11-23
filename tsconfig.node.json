@@ -20,5 +20,10 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "playwright.deployed.config.ts"]
+  "include": [
+    "vite.config.ts",
+    "worker/index.ts",
+    "playwright.config.ts",
+    "playwright.deployed.config.ts"
+  ]
 }

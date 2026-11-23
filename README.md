@@ -108,4 +108,4 @@ Notes:
 GitHub → Settings → Environments `staging` and `production` (add required reviewers on `production`), each with:
 
 - Secrets `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit), `CLOUDFLARE_ACCOUNT_ID`
-- Variables `VITE_API_BASE_URL` (backend Worker URL + `/api/v1`, e.g. `https://agi-board-backend-staging.huyen-cao.workers.dev/api/v1`), `VITE_WS_BASE_URL`, `FRONTEND_URL` (the URL above, for the smoke test)
+- Variables `VITE_API_BASE_URL` (the frontend's own URL + `/api/v1`, e.g. `https://agi-board-staging.huyen-cao.workers.dev/api/v1`: the frontend Worker forwards `/api/*` to the backend Worker through the service binding `API` in `wrangler.jsonc`, so cookies stay same-site; the backend Workers `agi-board-backend-staging` / `agi-board-backend-production` must be deployed first), `VITE_WS_BASE_URL`, `FRONTEND_URL` (the URL above, for the smoke test)
