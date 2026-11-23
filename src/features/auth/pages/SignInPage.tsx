@@ -1,22 +1,27 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useSearchParams } from 'react-router'
+import { z } from 'zod'
 import BrandMark from '@/components/common/BrandMark'
 import Spinner from '@/components/common/Spinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { toSessionUser, type AuthResult } from '@/features/auth/session'
-import { api, ApiError } from '@/lib/api'
+import { useSignIn } from '@/features/auth/hooks'
+import { ApiError } from '@/lib/api'
 import { env } from '@/lib/env'
 
 // WEB-01 Sign in.
-// API (agi-board-backend-4 auth.controller): POST /auth/sign-in {email,password} → 200 AuthResult (same body as GET /auth/me);
-// errors {error:{code}}: ACCOUNT_DEACTIVATED 403, SIGN_IN_LOCKED 429, else INVALID_CREDENTIALS/VALIDATION_FAILED.
+// API: see features/auth/api.ts. Errors: ACCOUNT_DEACTIVATED 403, SIGN_IN_LOCKED 429, else INVALID_CREDENTIALS/VALIDATION_FAILED.
 // Google: browser redirect to GET /auth/google; the callback returns to /sign-in?error=google_failed|account_deactivated.
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// No strength rules at sign-in (ticket): the password only has to be present.
+const schema = z.object({
+  email: z.email('Enter a valid email address.'),
+  password: z.string().min(1),
+})
 
 const NOTICES: Record<string, string> = {
   'password-updated': 'Password updated. Sign in with your new password.', // from WEB-15
@@ -54,44 +59,43 @@ function errorMessage(e: unknown): string {
 export default function SignInPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const login = useSignIn()
   const [showPassword, setShowPassword] = useState(false)
-  const [touched, setTouched] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(schema),
+    mode: 'onTouched',
+    defaultValues: { email: '', password: '' },
+  })
 
   const next = params.get('next')
   const notice = NOTICES[params.get('notice') ?? '']
   const [banner, setBanner] = useState<string | null>(URL_ERRORS[params.get('error') ?? ''] ?? null)
-
-  const emailInvalid = touched && !EMAIL_RE.test(email)
-  const canSubmit = EMAIL_RE.test(email) && password.length > 0
-
-  const login = useMutation({
-    mutationFn: () =>
-      api<AuthResult>('/auth/sign-in', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      }),
-    onSuccess: (res) => {
-      // Seed the session so the guards let us in without another round trip.
-      queryClient.setQueryData(['session'], toSessionUser(res))
-      if (res.next === 'verify-email') return navigate('/verify-email', { replace: true })
-      // Only same-site paths: a "//host" or absolute next would be an open redirect.
-      navigate(next && /^\/(?!\/)/.test(next) ? next : '/', { replace: true })
-    },
-    onError: (e) => setBanner(errorMessage(e)),
-  })
-
   const busy = login.isPending
+  const emailError = errors.email?.message
 
-  function onSubmit(ev: FormEvent) {
-    ev.preventDefault()
-    if (!canSubmit || busy) return
+  // Coming back with the browser's back button restores the page from cache with the spinner still on.
+  useEffect(() => {
+    const reset = (e: PageTransitionEvent) => e.persisted && setGoogleLoading(false)
+    window.addEventListener('pageshow', reset)
+    return () => window.removeEventListener('pageshow', reset)
+  }, [])
+
+  const onSubmit = handleSubmit((values) => {
     setBanner(null)
-    login.mutate()
-  }
+    login.mutate(values, {
+      onSuccess: (res) => {
+        if (res.next === 'verify-email') return navigate('/verify-email', { replace: true })
+        // Only same-site paths: a "//host" or absolute next would be an open redirect.
+        navigate(next && /^\/(?!\/)/.test(next) ? next : '/', { replace: true })
+      },
+      onError: (e) => setBanner(errorMessage(e)),
+    })
+  })
 
   function onGoogle() {
     setGoogleLoading(true)
@@ -99,7 +103,7 @@ export default function SignInPage() {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-4">
       <div className="flex justify-center">
         <BrandMark className="size-12 rounded-[14px]" />
       </div>
@@ -146,15 +150,14 @@ export default function SignInPage() {
           type="email"
           autoComplete="email"
           placeholder="name@example.com"
-          value={email}
           disabled={busy}
-          aria-invalid={emailInvalid}
-          onChange={(e) => setEmail(e.target.value)}
-          onBlur={() => setTouched(true)}
+          aria-invalid={!!emailError}
+          aria-describedby={emailError ? 'email-error' : undefined}
+          {...register('email')}
         />
-        {emailInvalid && (
-          <p role="alert" className="text-xs text-destructive">
-            Enter a valid email address.
+        {emailError && (
+          <p id="email-error" role="alert" className="text-xs text-destructive">
+            {emailError}
           </p>
         )}
       </div>
@@ -168,10 +171,9 @@ export default function SignInPage() {
             id="password"
             type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
-            value={password}
             disabled={busy}
             className={cn(FIELD, 'pr-11')}
-            onChange={(e) => setPassword(e.target.value)}
+            {...register('password')}
           />
           <Button
             type="button"
@@ -193,7 +195,7 @@ export default function SignInPage() {
         </Link>
       </div>
 
-      <Button type="submit" className={BTN} disabled={!canSubmit || busy} aria-busy={busy}>
+      <Button type="submit" className={BTN} disabled={!isValid || busy} aria-busy={busy}>
         {busy ? (
           <>
             <Spinner />
