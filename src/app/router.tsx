@@ -22,6 +22,7 @@ import AdminLayout from './layouts/AdminLayout'
 import AppLayout from './layouts/AppLayout'
 import AuthLayout from './layouts/AuthLayout'
 import WorkspaceLayout from './layouts/WorkspaceLayout'
+import Redirect from './Redirect'
 import RouteError from './RouteError'
 
 // Route ↔ screen table: docs/frontend-init-plan.md section 4. Dialogs (WEB-D01…D17) are not routes.
@@ -29,6 +30,9 @@ export const routes: RouteObject[] = [
   {
     errorElement: <RouteError />,
     children: [
+      // The API's Google callback redirects to /sign-in and /home.
+      { path: 'sign-in', element: <Redirect to="/signin" /> },
+      { path: 'home', element: <Redirect to="/" /> },
       { path: 'status', element: <StatusPage /> }, // technical page, outside the auth guards
       {
         element: <AuthLayout />,

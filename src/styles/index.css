@@ -57,4 +57,9 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+  /* Tailwind's preflight sets buttons to the default cursor. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
 }
