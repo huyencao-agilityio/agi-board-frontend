@@ -1,16 +1,23 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import PageNotAvailable from '@/components/common/PageNotAvailable'
-import { useSession, type SystemRole } from '@/features/auth/session'
+import { SESSION_ENDED_KEY, useSession, type SystemRole } from '@/features/auth/session'
 
 // Client guards only steer navigation and hide controls; the server enforces every permission.
 
 export function RequireAuth() {
   const { data: user, isPending } = useSession()
   const location = useLocation()
+  const ended = useQueryClient().getQueryData(SESSION_ENDED_KEY)
   if (isPending) return null
   if (!user) {
-    const next = encodeURIComponent(location.pathname + location.search)
-    return <Navigate to={`/signin?next=${next}`} replace />
+    // Opening the app at "/" needs no ?next; "You were signed out." only when the session ended without a logout.
+    const params = new URLSearchParams()
+    const path = location.pathname + location.search
+    if (path !== '/') params.set('next', path)
+    if (ended) params.set('notice', 'signed-out')
+    const query = params.toString()
+    return <Navigate to={`/signin${query ? `?${query}` : ''}`} replace />
   }
   return <Outlet />
 }
