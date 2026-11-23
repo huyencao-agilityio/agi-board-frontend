@@ -221,6 +221,13 @@ Check if `.specify/extensions.yml` exists in the project root.
 
 Report final status with summary of completed work.
 
+End the report with the next steps of the flow in `README.md`; implementing is not the last step before a PR:
+
+1. Run `pnpm lint`, `pnpm typecheck` and `pnpm test` (plus `pnpm e2e` when routes, guards, auth or `src/lib/api.ts` changed), and fix what fails.
+2. Run the `react-reviewer` agent and fix Critical and High findings.
+3. Optionally `/speckit-converge` to find unbuilt work.
+4. `/create-pr` (it repeats the checks and the review gate).
+
 ## Done When
 
 - [ ] All tasks in tasks.md completed and marked `[X]`
