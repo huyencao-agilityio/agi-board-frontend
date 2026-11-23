@@ -8,8 +8,8 @@
     "not_found_handling": "single-page-application",
   },
   "env": {
-    // Worker names set the URLs: https://<name>.agi-board.workers.dev (backend APP_ORIGIN must match).
-    "staging": { "name": "staging" },
-    "production": { "name": "app" },
+    // Worker names set the URLs: https://<name>.huyen-cao.workers.dev (backend APP_ORIGIN must match).
+    "staging": { "name": "agi-board-staging" },
+    "production": { "name": "agi-board-app" },
   },
 }
