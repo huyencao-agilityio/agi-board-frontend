@@ -88,7 +88,7 @@ export const routes: RouteObject[] = [
                   },
                 ],
               },
-              { path: '*', element: <PageNotAvailable /> }, // WEB-13
+              { path: '*', element: <PageNotAvailable />, handle: { notFound: true } }, // WEB-13
             ],
           },
         ],
