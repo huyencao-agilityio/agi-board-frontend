@@ -40,6 +40,7 @@ Same conventions as `agi-board-backend`.
 
 - Every change belongs to one Trello card (board "AGI Board"); its number (`#123`) is the ticket ID.
 - Branches: `main` (production) ← `develop` ← work branches named `<type>/<kebab-slug>`, e.g. `feat/init-structure`, `fix/board-404`. Types: `feat`, `fix`, `chore`, `refactor`, `test`, `docs`, `build`, `ci`, `perf`, `hotfix`, `release`. Branch from `develop` and open the PR into `develop`. Check a new branch name with `sh scripts/check-branch-name.sh <name>` before the first push.
+- Starting a card: `/pull-ticket <number>` creates the branch `<type>/<number>-<slug>` in its own git worktree `../agi-board-frontend-<number>/` (one per ticket, so tickets run in parallel) and writes the card to `specs/<number>/spec.md` there; continue with `/speckit-clarify` or `/speckit-plan` in that worktree.
 - Commit subject: `<type>(<scope>): #<id> <Imperative summary>`, e.g. `feat(boards): #123 Add route guards`. Types and rules are in `commitlint.config.mjs` (scope required, lowercase; summary starts with a capital letter; header ≤ 100 chars). If the card number is unknown, ask the user.
 - Enforced by husky: `commit-msg` runs commitlint, `pre-push` checks the branch name; CI re-checks both on every PR. Never bypass them with `--no-verify`.
 - Renaming a branch that already heads an open PR closes that PR on GitHub; ask the user first.

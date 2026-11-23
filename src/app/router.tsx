@@ -11,6 +11,7 @@ import VerifyEmailPage from '@/features/auth/pages/VerifyEmailPage'
 import BoardPage from '@/features/boards/pages/BoardPage'
 import CardWindowPage from '@/features/cards/pages/CardWindowPage'
 import ProfilePage from '@/features/profile/pages/ProfilePage'
+import StatusPage from '@/features/status/pages/StatusPage'
 import AuditLogPage from '@/features/workspaces/pages/AuditLogPage'
 import HomePage from '@/features/workspaces/pages/HomePage'
 import WorkspaceBoardsPage from '@/features/workspaces/pages/WorkspaceBoardsPage'
@@ -28,6 +29,7 @@ export const routes: RouteObject[] = [
   {
     errorElement: <RouteError />,
     children: [
+      { path: 'status', element: <StatusPage /> }, // technical page, outside the auth guards
       {
         element: <AuthLayout />,
         children: [
