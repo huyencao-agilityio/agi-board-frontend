@@ -12,7 +12,8 @@ Every PR/MR is tied to one Trello card. The card number (`#123`, the number Trel
 Take the card number from, in order:
 
 1. What the user said (`#123`, a Trello card URL).
-2. The commits on this branch: `git log --format=%s <base>..HEAD` and take the `#123` after `<type>(<scope>): `.
+2. The branch name `<type>/<number>-<slug>` created by `/pull-ticket`.
+3. The commits on this branch: `git log --format=%s <base>..HEAD` and take the `#123` after `<type>(<scope>): `.
 
 If none gives exactly one number, or different sources disagree, ask the user. Never guess.
 
@@ -25,7 +26,7 @@ If Trello is not connected or the card cannot be found, stop and ask the user fo
 ## 3. Check the branch before opening
 
 - Base branch: `develop` unless the user says otherwise (`main` only receives release/hotfix PRs).
-- Never open a PR from `main`, `develop` or another protected branch. The head branch must pass `sh scripts/check-branch-name.sh` (`<type>/<kebab-slug>`, e.g. `feat/init-structure`); if it does not, tell the user before pushing. Renaming a branch that already heads an open PR closes that PR, so ask first.
+- Never open a PR from `main`, `develop` or another protected branch. The head branch must pass `sh scripts/check-branch-name.sh` (`<type>/<kebab-slug>`; `/pull-ticket` names it `<type>/<number>-<slug>`, e.g. `feat/123-add-route-guards`); if it does not, tell the user before pushing. Renaming a branch that already heads an open PR closes that PR, so ask first.
 - Every commit on the branch must pass commitlint with this card's number: `pnpm exec commitlint --from <base> --to HEAD`. If one does not, tell the user and offer to fix it instead of opening the PR.
 - Run `pnpm lint && pnpm typecheck && pnpm test` and use the real results in "How tested". If something fails, say so; do not hide it.
 - Push the branch (no force push).
