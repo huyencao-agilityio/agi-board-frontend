@@ -8,7 +8,8 @@
     "not_found_handling": "single-page-application",
   },
   "env": {
-    "staging": { "name": "agi-board-frontend-staging" },
-    "production": { "name": "agi-board-frontend-production" },
+    // Worker names set the URLs: https://<name>.agi-board.workers.dev (backend APP_ORIGIN must match).
+    "staging": { "name": "staging" },
+    "production": { "name": "app" },
   },
 }
