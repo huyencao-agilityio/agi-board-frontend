@@ -8,7 +8,9 @@ import { SESSION_ENDED_KEY, useSession, type SystemRole } from '@/features/auth/
 export function RequireAuth() {
   const { data: user, isPending } = useSession()
   const location = useLocation()
-  const notFound = useMatches().some((m) => (m.handle as { notFound?: boolean } | undefined)?.notFound)
+  const notFound = useMatches().some(
+    (m) => (m.handle as { notFound?: boolean } | undefined)?.notFound,
+  )
   const ended = useQueryClient().getQueryData(SESSION_ENDED_KEY)
   if (isPending) return null
   if (!user) {
