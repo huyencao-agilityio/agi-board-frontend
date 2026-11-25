@@ -2,8 +2,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter, Route, Routes } from 'react-router'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { describe, expect, it } from 'vitest'
+import {
+  clearPendingPassword,
+  getPendingPassword,
+  setPendingPassword,
+} from '@/features/auth/pending-password'
 import { server } from '@/test/server'
 import SignInPage from './SignInPage'
 
@@ -13,23 +18,40 @@ const RESULT = (next: string) => ({
 })
 const API = import.meta.env.VITE_API_BASE_URL
 
-function setup(url = '/signin') {
+function StateProbe() {
+  return <pre data-testid="state">{JSON.stringify(useLocation().state)}</pre>
+}
+
+function SearchProbe() {
+  return <pre data-testid="search">{useLocation().search}</pre>
+}
+
+function setupWithClient(url = '/signin') {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
-    <QueryClientProvider
-      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
-    >
+    <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[url]}>
         <Routes>
-          <Route path="/signin" element={<SignInPage />} />
+          <Route
+            path="/signin"
+            element={
+              <>
+                <SignInPage />
+                <SearchProbe />
+              </>
+            }
+          />
           <Route path="/" element={<p>Home</p>} />
-          <Route path="/verify-email" element={<p>Verify</p>} />
+          <Route path="/verify-email" element={<StateProbe />} />
           <Route path="/b/x" element={<p>Board</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   )
-  return userEvent.setup()
+  return { user: userEvent.setup(), client }
 }
+
+const setup = (url?: string) => setupWithClient(url).user
 
 async function fill(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Email'), 'a@b.co')
@@ -98,12 +120,34 @@ describe('SignInPage', () => {
     expect(await screen.findByText('Home')).toBeInTheDocument()
   })
 
-  it('sends unverified users to verify-email', async () => {
+  it('sends unverified users to verify-email without a session, with their email', async () => {
     server.use(http.post(`${API}/auth/sign-in`, () => HttpResponse.json(RESULT('verify-email'))))
-    const user = setup()
+    const before = Date.now()
+    const { user, client } = setupWithClient()
+    await user.type(screen.getByLabelText('Email'), 'A@b.co')
+    await user.type(screen.getByLabelText('Password'), 'x')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    const state = JSON.parse((await screen.findByTestId('state')).textContent ?? '') as {
+      email: string
+      resendAt: number
+    }
+    expect(state.email).toBe('a@b.co')
+    expect(state.resendAt).toBeGreaterThanOrEqual(before + 60_000)
+    expect(Object.keys(state)).toHaveLength(2)
+    expect(getPendingPassword('a@b.co')).toBe('x')
+    expect(client.getQueryData(['session'])).toBeUndefined()
+    clearPendingPassword()
+  })
+
+  it('seeds the session of a verified user and forgets a password held from before', async () => {
+    setPendingPassword('other@b.co', 'x')
+    server.use(http.post(`${API}/auth/sign-in`, () => HttpResponse.json(RESULT('home'))))
+    const { user, client } = setupWithClient()
     await fill(user)
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
-    expect(await screen.findByText('Verify')).toBeInTheDocument()
+    expect(await screen.findByText('Home')).toBeInTheDocument()
+    expect(client.getQueryData(['session'])).toMatchObject({ id: 'u1' })
+    expect(getPendingPassword('other@b.co')).toBeUndefined()
   })
 
   it.each([
@@ -123,9 +167,10 @@ describe('SignInPage', () => {
   it.each([
     ['google_failed', 'Google sign-in failed. Try again.'],
     ['account_deactivated', 'This account has been deactivated. Contact your administrator.'],
-  ])('shows the banner for ?error=%s', (error, text) => {
-    setup(`/signin?error=${error}`)
+  ])('shows the banner for ?error=%s and takes it out of the URL', (error, text) => {
+    setup(`/signin?next=%2Fb%2Fx&error=${error}`)
     expect(screen.getByRole('alert')).toHaveTextContent(text)
+    expect(screen.getByTestId('search')).toHaveTextContent(/^\?next=%2Fb%2Fx$/)
   })
 
   it('toggles password visibility and shows notices', async () => {

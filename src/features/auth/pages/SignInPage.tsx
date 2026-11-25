@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useSearchParams } from 'react-router'
@@ -8,10 +7,14 @@ import BrandMark from '@/components/common/BrandMark'
 import Spinner from '@/components/common/Spinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { GoogleButton } from '@/features/auth/components/GoogleButton'
+import { PasswordInput } from '@/features/auth/components/PasswordInput'
+import { BTN, FIELD, LABEL, LINK } from '@/features/auth/components/styles'
 import { useSignIn } from '@/features/auth/hooks'
-import { ApiError } from '@/lib/api'
-import { env } from '@/lib/env'
+import { MESSAGES } from '@/features/auth/messages'
+import { setPendingPassword } from '@/features/auth/pending-password'
+import { newVerifyState } from '@/features/auth/verify-state'
+import { errorCode } from '@/lib/api'
 
 // WEB-01 Sign in.
 // API: see features/auth/api.ts. Errors: ACCOUNT_DEACTIVATED 403, SIGN_IN_LOCKED 429, else INVALID_CREDENTIALS/VALIDATION_FAILED.
@@ -28,40 +31,22 @@ const NOTICES: Record<string, string> = {
   'signed-out': 'You were signed out. Sign in again.',
 }
 
-// Mockup sizes (WEB-01 states): 44px controls, 12px radius, bold labels/links.
-const FIELD =
-  'h-11 rounded-md bg-(--color-surface) px-3 text-[15px] disabled:opacity-100 md:text-[15px]'
-const LABEL = 'text-[13px] font-bold'
-const LINK = 'text-sm font-bold text-primary-text underline'
-const BTN = 'h-11 w-full rounded-md px-5 font-bold disabled:opacity-45'
-
-const MESSAGES = {
-  wrong: 'Email or password is incorrect.',
-  deactivated: 'This account has been deactivated. Contact your administrator.',
-  locked: 'Too many attempts. Try again in 15 minutes.',
-  google: 'Google sign-in failed. Try again.',
-}
-
 const URL_ERRORS: Record<string, string> = {
   google_failed: MESSAGES.google,
   account_deactivated: MESSAGES.deactivated,
 }
 
 function errorMessage(e: unknown): string {
-  if (e instanceof ApiError) {
-    const code = (e.body as { error?: { code?: string } } | undefined)?.error?.code
-    if (code === 'SIGN_IN_LOCKED') return MESSAGES.locked
-    if (code === 'ACCOUNT_DEACTIVATED') return MESSAGES.deactivated
-  }
+  const code = errorCode(e)
+  if (code === 'SIGN_IN_LOCKED') return MESSAGES.locked
+  if (code === 'ACCOUNT_DEACTIVATED') return MESSAGES.deactivated
   return MESSAGES.wrong
 }
 
 export default function SignInPage() {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const login = useSignIn()
-  const [showPassword, setShowPassword] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false)
   const {
     register,
     handleSubmit,
@@ -78,29 +63,31 @@ export default function SignInPage() {
   const busy = login.isPending
   const emailError = errors.email?.message
 
-  // Coming back with the browser's back button restores the page from cache with the spinner still on.
+  // The Google callback can only report its error in the URL; the banner above keeps it, so the URL need not.
   useEffect(() => {
-    const reset = (e: PageTransitionEvent) => e.persisted && setGoogleLoading(false)
-    window.addEventListener('pageshow', reset)
-    return () => window.removeEventListener('pageshow', reset)
-  }, [])
+    if (!params.has('error')) return
+    const rest = new URLSearchParams(params)
+    rest.delete('error')
+    setParams(rest, { replace: true })
+  }, [params, setParams])
 
   const onSubmit = handleSubmit((values) => {
     setBanner(null)
     login.mutate(values, {
       onSuccess: (res) => {
-        if (res.next === 'verify-email') return navigate('/verify-email', { replace: true })
+        if (res.next === 'verify-email') {
+          setPendingPassword(res.user.email, values.password)
+          return navigate('/verify-email', {
+            replace: true,
+            state: newVerifyState(res.user.email),
+          })
+        }
         // Only same-site paths: a "//host" or absolute next would be an open redirect.
         navigate(next && /^\/(?!\/)/.test(next) ? next : '/', { replace: true })
       },
       onError: (e) => setBanner(errorMessage(e)),
     })
   })
-
-  function onGoogle() {
-    setGoogleLoading(true)
-    window.location.assign(`${env.VITE_API_BASE_URL}/auth/google`)
-  }
 
   return (
     <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-4">
@@ -125,16 +112,7 @@ export default function SignInPage() {
 
       <h1 className="text-center text-[22px] font-black">Sign in</h1>
 
-      <Button
-        type="button"
-        variant="outline"
-        className={cn(BTN, 'border-primary text-primary-text')}
-        disabled={googleLoading}
-        onClick={onGoogle}
-      >
-        {googleLoading && <Spinner />}
-        Continue with Google
-      </Button>
+      <GoogleButton />
 
       <div className="flex items-center gap-3 text-[13px] text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
         or
@@ -166,27 +144,12 @@ export default function SignInPage() {
         <label htmlFor="password" className={LABEL}>
           Password
         </label>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="current-password"
-            disabled={busy}
-            className={cn(FIELD, 'pr-11')}
-            {...register('password')}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="absolute top-1 right-1"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            aria-pressed={showPassword}
-            onClick={() => setShowPassword((v) => !v)}
-          >
-            {showPassword ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
-          </Button>
-        </div>
+        <PasswordInput
+          id="password"
+          autoComplete="current-password"
+          disabled={busy}
+          {...register('password')}
+        />
       </div>
 
       <div>

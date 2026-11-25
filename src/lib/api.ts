@@ -15,6 +15,12 @@ export class ApiError extends Error {
   }
 }
 
+/** The backend's `error.code`, or undefined for any other failure. */
+export function errorCode(e: unknown): string | undefined {
+  if (!(e instanceof ApiError)) return undefined
+  return (e.body as { error?: { code?: string } } | null | undefined)?.error?.code
+}
+
 function readCookie(name: string): string | undefined {
   return document.cookie
     .split('; ')

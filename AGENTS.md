@@ -30,7 +30,7 @@ UI labels and messages are English and copied verbatim from the spec. Do not inv
 - Colors only via tokens (`src/styles/tokens.css`, mapped to Tailwind/shadcn in `src/styles/index.css`). Exceptions: the board label palette and the 10 board background colors, which are data.
 - Server state uses TanStack Query through `src/lib/api.ts`; never call `fetch` directly (it adds cookies and the CSRF header).
 - Permissions are enforced by the server. The client only hides or disables controls; 403/404 show WEB-13.
-- Never reveal whether an email has an account (sign-up, reset, lockout look the same for every address).
+- Never reveal whether an email has an account (reset, resend code, lockout look the same for every address). Exception: sign-up's `EMAIL_ALREADY_EXISTS` (decision #367).
 - Logout is POST only.
 - No dark mode, no i18n (not in scope).
 
