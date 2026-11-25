@@ -17,7 +17,7 @@ import HomePage from '@/features/workspaces/pages/HomePage'
 import WorkspaceBoardsPage from '@/features/workspaces/pages/WorkspaceBoardsPage'
 import WorkspaceMembersPage from '@/features/workspaces/pages/WorkspaceMembersPage'
 import WorkspaceSettingsPage from '@/features/workspaces/pages/WorkspaceSettingsPage'
-import { RequireAuth, RequireGuest, RequireSystemRole } from './guards'
+import { RequireAuth, RequireGuest, RequireSystemRole, WaitForSession } from './guards'
 import AdminLayout from './layouts/AdminLayout'
 import AppLayout from './layouts/AppLayout'
 import AuthLayout from './layouts/AuthLayout'
@@ -45,8 +45,13 @@ export const routes: RouteObject[] = [
               { path: 'verify-email', element: <VerifyEmailPage /> }, // WEB-16
             ],
           },
-          { path: 'forgot-password', element: <ForgotPasswordPage /> }, // WEB-14
-          { path: 'reset-password', element: <ResetPasswordPage /> }, // WEB-15
+          {
+            element: <WaitForSession />,
+            children: [
+              { path: 'forgot-password', element: <ForgotPasswordPage /> }, // WEB-14
+              { path: 'reset-password', element: <ResetPasswordPage /> }, // WEB-15
+            ],
+          },
         ],
       },
       {
