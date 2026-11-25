@@ -32,6 +32,13 @@ export function RequireGuest() {
   return user ? <Navigate to="/" replace /> : <Outlet />
 }
 
+/** For pages open to anyone: the first GET sets the CSRF cookie their POST needs, so wait for it. */
+export function WaitForSession() {
+  // Not isPending: a refetch after a failed one is pending again and would unmount the page.
+  const { isFetched } = useSession()
+  return isFetched ? <Outlet /> : null
+}
+
 export function RequireSystemRole({ roles }: { roles: SystemRole[] }) {
   const { data: user } = useSession()
   return user && roles.includes(user.systemRole) ? <Outlet /> : <PageNotAvailable />

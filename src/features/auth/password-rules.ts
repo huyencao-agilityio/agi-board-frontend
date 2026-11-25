@@ -5,6 +5,8 @@ export function passwordRules(password: string, email: string): Rule[] {
   const name = email.trim().toLowerCase().split('@')[0]
   return [
     { label: 'At least 8 characters', ok: password.length >= 8 },
+    // Not in the mockups, so listed only when broken.
+    ...(password.length > 128 ? [{ label: 'At most 128 characters', ok: false }] : []),
     {
       label: 'At least one letter and one number',
       ok: /\p{L}/u.test(password) && /\d/.test(password),

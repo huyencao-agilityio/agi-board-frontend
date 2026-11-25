@@ -23,3 +23,18 @@ export function verifyEmail(body: { email: string; code: string; password: strin
 export function resendCode(body: { email: string }) {
   return post<{ sent: true }>('/auth/resend-code', body)
 }
+
+/** POST /auth/forgot-password. The same answer for every email, also when nothing was sent. */
+export function forgotPassword(body: { email: string }) {
+  return post<{ sent: true }>('/auth/forgot-password', body)
+}
+
+/** POST /auth/reset-password/check. Does not use the link up. Code: RESET_LINK_INVALID. */
+export function checkResetLink(body: { token: string }) {
+  return post<{ email: string }>('/auth/reset-password/check', body)
+}
+
+/** POST /auth/reset-password. Ends every session of the account. Codes: RESET_LINK_INVALID, VALIDATION_FAILED (the link stays valid). */
+export function resetPassword(body: { token: string; password: string }) {
+  return post<{ next: 'sign-in' }>('/auth/reset-password', body)
+}

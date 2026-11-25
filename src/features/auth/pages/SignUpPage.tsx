@@ -11,6 +11,7 @@ import { GoogleButton } from '@/features/auth/components/GoogleButton'
 import { PasswordInput } from '@/features/auth/components/PasswordInput'
 import { RuleList } from '@/features/auth/components/RuleList'
 import { BTN, FIELD, LABEL, LINK } from '@/features/auth/components/styles'
+import { emailSchema } from '@/features/auth/email-schema'
 import { useSignUp } from '@/features/auth/hooks'
 import { MESSAGES } from '@/features/auth/messages'
 import { isValidPassword, passwordRules } from '@/features/auth/password-rules'
@@ -20,8 +21,6 @@ import { errorCode } from '@/lib/api'
 
 // WEB-02 Sign up.
 // EMAIL_ALREADY_EXISTS 409 tells that an email has an account; accepted in decision #367.
-
-const emailSchema = z.string().trim().pipe(z.email('Enter a valid email address.'))
 
 const schema = z
   .object({ fullName: z.string().trim().min(1), email: emailSchema, password: z.string() })

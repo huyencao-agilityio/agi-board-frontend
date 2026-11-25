@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isValidPassword, passwordRules } from './password-rules'
 
 const LENGTH = 'At least 8 characters'
+const LONG = 'At most 128 characters'
 const MIX = 'At least one letter and one number'
 const NAME = 'Does not contain your email name'
 
@@ -9,6 +10,8 @@ describe('passwordRules', () => {
   it.each([
     ['abcd1234', 'new@x.co', []],
     ['abcd123', 'new@x.co', [LENGTH]],
+    [`a1${'x'.repeat(126)}`, 'new@x.co', []],
+    [`a1${'x'.repeat(127)}`, 'new@x.co', [LONG]],
     ['abcdefgh', 'new@x.co', [MIX]],
     ['12345678', 'new@x.co', [MIX]],
     ['đ1234567', 'new@x.co', []],
