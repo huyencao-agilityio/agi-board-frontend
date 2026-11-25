@@ -42,9 +42,9 @@ export const routes: RouteObject[] = [
             children: [
               { path: 'signin', element: <SignInPage /> }, // WEB-01
               { path: 'signup', element: <SignUpPage /> }, // WEB-02
+              { path: 'verify-email', element: <VerifyEmailPage /> }, // WEB-16
             ],
           },
-          { path: 'verify-email', element: <VerifyEmailPage /> }, // WEB-16
           { path: 'forgot-password', element: <ForgotPasswordPage /> }, // WEB-14
           { path: 'reset-password', element: <ResetPasswordPage /> }, // WEB-15
         ],

@@ -25,7 +25,7 @@ The server enforces every rule; the client must not weaken it or leak data. If a
 
 ## Account privacy
 
-- Sign-up, sign-in failure, forgot password, resend code and lockout show the same message for every email address. Do not branch the UI on "email not found".
+- Sign-in failure, forgot password, resend code and lockout show the same message for every email address. Do not branch the UI on "email not found". Exception: sign-up shows a banner on `EMAIL_ALREADY_EXISTS` (decision #367).
 - Do not put emails, tokens, reset codes or invite tokens in logs, analytics or error messages. Read reset/verify tokens from the URL, send them, then remove them from the address bar (`navigate(..., { replace: true })`).
 
 ## Rendering untrusted content

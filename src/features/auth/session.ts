@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { api, ApiError } from '@/lib/api'
+import { api, ApiError, errorCode } from '@/lib/api'
 
 export type SystemRole = 'USER' | 'SUPPORT' | 'SUPER_ADMIN'
 
@@ -33,8 +33,7 @@ export function useSession() {
         return toSessionUser(await api<AuthResult>('/auth/me'))
       } catch (e) {
         if (e instanceof ApiError && e.status === 401) {
-          const code = (e.body as { error?: { code?: string } } | undefined)?.error?.code
-          queryClient.setQueryData(SESSION_ENDED_KEY, code === 'SESSION_ENDED')
+          queryClient.setQueryData(SESSION_ENDED_KEY, errorCode(e) === 'SESSION_ENDED')
           return null
         }
         throw e

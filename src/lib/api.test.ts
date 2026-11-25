@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it } from 'vitest'
 import { server } from '@/test/server'
-import { api, ApiError, CSRF_COOKIE, CSRF_HEADER } from './api'
+import { api, ApiError, CSRF_COOKIE, CSRF_HEADER, errorCode } from './api'
 
 const API = import.meta.env.VITE_API_BASE_URL
 
@@ -56,5 +56,16 @@ describe('api', () => {
   it('accepts an empty response body', async () => {
     server.use(http.post(`${API}/auth/logout`, () => new HttpResponse(null, { status: 204 })))
     await expect(api('/auth/logout', { method: 'POST' })).resolves.toBeUndefined()
+  })
+})
+
+describe('errorCode', () => {
+  it.each([
+    ['a backend error', new ApiError(400, { error: { code: 'X' } }), 'X'],
+    ['an empty body', new ApiError(500, undefined), undefined],
+    ['a null body', new ApiError(500, null), undefined],
+    ['another error', new TypeError('Failed to fetch'), undefined],
+  ])('reads %s', (_name, error, expected) => {
+    expect(errorCode(error)).toBe(expected)
   })
 })
