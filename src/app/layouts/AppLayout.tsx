@@ -17,9 +17,10 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const isSystemAdmin = user?.systemRole === 'SUPPORT' || user?.systemRole === 'SUPER_ADMIN'
 
-  const handleLogOut = async () => {
-    // Sign out locally even when the request fails; only the server can clear the httpOnly cookie.
-    await logOut().catch(() => {})
+  const handleLogOut = () => {
+    // Not awaited: a failed or stalled request must not keep the user on the page (card #54).
+    // The CSRF header is read when the call starts, so clearing state right after is safe.
+    void logOut().catch(() => {})
     queryClient.clear()
     // Signed out without refetching /auth/me: a still-valid cookie must not bounce the user back in.
     queryClient.setQueryData(['session'], null)

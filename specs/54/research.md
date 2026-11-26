@@ -2,7 +2,8 @@
 
 ## R1. What happens when `POST /auth/logout` fails
 
-- **Decision**: Swallow the error (`.catch(() => {})`), then always clear client state and navigate.
+- **Decision**: Do not await the request: start `logOut()` in the background (`void logOut().catch(() => {})`), then clear client state and navigate at once. (Changed after PR review: awaiting it left the user on the protected page while a request hung, since `api()` has no timeout.)
+- **Trade-off**: on a very slow network, a sign-in made before the old logout response arrives can be ended when that response clears the cookies. Accepted: rare, and the user only has to sign in again.
 - **Rationale**: Business rule "Frontend clears local state even if the logout request fails due to network errors" and frontend AC 3. A 401/403 (session already ended, CSRF missing) means there is nothing more the user can do either; the server is the authority on the cookie. No message is shown: the spec defines none, and the user lands on Sign in as asked.
 - **Alternatives considered**: `try/finally` without catch: rethrows into the menu's `onSelect`, causing an unhandled rejection. Showing an error toast: wording not in the spec (would need asking), and the user still ends up signed out locally.
 

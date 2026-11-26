@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { createMemoryRouter, RouterProvider } from 'react-router'
@@ -14,7 +14,7 @@ const ME = {
 }
 
 /** Signed in at Home; logout answers with `respond`. Returns what the server saw. */
-async function signedInHome(respond: () => Response) {
+async function signedInHome(respond: () => Response | Promise<Response>) {
   const seen = { me: 0, logouts: [] as (string | null)[] }
   server.use(
     http.get(`${API}/auth/me`, () => {
@@ -49,7 +49,8 @@ describe('AppLayout Log out', () => {
   it('posts logout with the CSRF header and opens a plain Sign in', async () => {
     document.cookie = 'csrf_token=abc'
     const { router, seen } = await signedInHome(() => new HttpResponse(null, { status: 204 }))
-    expect(seen.logouts).toEqual(['abc'])
+    // The request runs in the background, so it may reach the server after Sign in shows.
+    await waitFor(() => expect(seen.logouts).toEqual(['abc']))
     expect(router.state.location.pathname).toBe('/signin')
     expect(router.state.location.search).toBe('')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
@@ -58,7 +59,8 @@ describe('AppLayout Log out', () => {
   it.each([
     ['a network error', () => HttpResponse.error()],
     ['a 500', () => HttpResponse.json({ error: { code: 'INTERNAL' } }, { status: 500 })],
-  ])('still signs out locally after %s', async (_name, respond) => {
+    ['a request that never answers', () => new Promise<Response>(() => {})],
+  ])('still signs out locally on %s', async (_name, respond) => {
     const { router, seen } = await signedInHome(respond)
     expect(router.state.location.pathname).toBe('/signin')
     // The session is seeded as signed out, so a still-valid cookie is not asked about again.
