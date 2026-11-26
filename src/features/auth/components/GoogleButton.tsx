@@ -3,7 +3,7 @@ import Spinner from '@/components/common/Spinner'
 import { Button } from '@/components/ui/button'
 import { env } from '@/lib/env'
 import { cn } from '@/lib/utils'
-import { BTN } from './styles'
+import { BTN } from '@/components/common/form-styles'
 
 /** Starts the Google flow, which signs up or signs in, with a full-page redirect to GET /auth/google. */
 export function GoogleButton() {

@@ -1,5 +1,5 @@
 import { Check, X } from 'lucide-react'
-import type { Rule } from '@/features/auth/password-rules'
+import type { Rule } from '@/lib/password-rules'
 import { cn } from '@/lib/utils'
 
 /** Live checklist under a field: grey while the field is empty, then red x or green check. */

@@ -3,7 +3,7 @@ import { useState, type ComponentProps } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { FIELD } from './styles'
+import { FIELD } from './form-styles'
 
 /** Masked input with a show/hide eye. */
 export function PasswordInput(props: Omit<ComponentProps<typeof Input>, 'type' | 'className'>) {
