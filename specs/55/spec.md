@@ -12,17 +12,20 @@
 ## Description
 
 ## Overview
+
 Two issues found while testing auth navigation on the frontend.
 
 1. After sign-in, the user is sent back to the page they came from (`?next=`). We no longer want this: sign-in always lands on Home (`/`).
 2. A signed-in user who types a guest URL (`/signin`, `/signup`, `/verify-email`, `/forgot-password`) briefly sees the empty auth card (border radius + shadow) before the redirect. `/forgot-password` does not redirect at all.
 
 ## Root cause
+
 - `RequireAuth` (`src/app/guards.tsx`) adds `?next=<path>`; `SignInPage` reads it and navigates there.
 - In `src/app/router.tsx`, `AuthLayout` (the card) wraps the guards, so while the session is loading the guard returns `null` inside an already-rendered card.
 - `/forgot-password` sits under `WaitForSession`, not `RequireGuest`.
 
 ## Scope
+
 - Remove `?next` from `RequireAuth` and from `SignInPage`; sign-in success always navigates to `/`. Keep `?notice=signed-out` (shows "You were signed out. Sign in again." when a session ends without logout).
 - Router: move the guards above `AuthLayout` so nothing renders until the session is known.
 - Move `/forgot-password` under `RequireGuest`.
