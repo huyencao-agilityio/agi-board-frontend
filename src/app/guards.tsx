@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { Navigate, Outlet } from 'react-router'
 import PageNotAvailable from '@/components/common/PageNotAvailable'
-import { SESSION_ENDED_KEY, useSession, type SystemRole } from '@/features/auth/session'
+import { useSession, type SystemRole } from '@/features/auth/session'
+import { SESSION_ENDED_KEY } from '@/lib/query-client'
 
 // Client guards only steer navigation and hide controls; the server enforces every permission.
 // Guards sit above the layouts, so nothing renders until the session is known.

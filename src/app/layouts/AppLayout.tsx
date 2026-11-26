@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { Link, Outlet, useNavigate } from 'react-router'
+import { Avatar } from '@/components/common/Avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -35,18 +36,28 @@ export default function AppLayout() {
         </Link>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost">{user?.name}</Button>
+            <Button variant="ghost">
+              {/* Decorative here: the button's name is the person's name. */}
+              {user && (
+                <span aria-hidden="true" className="contents">
+                  <Avatar name={user.name} url={user.avatarUrl} size="sm" />
+                </span>
+              )}
+              {user?.name}
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild className="cursor-pointer">
               <Link to="/profile">Profile</Link>
             </DropdownMenuItem>
             {isSystemAdmin && (
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="cursor-pointer">
                 <Link to="/admin/users">Admin console</Link>
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onSelect={handleLogOut}>Log out</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onSelect={handleLogOut}>
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>

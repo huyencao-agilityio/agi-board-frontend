@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, ApiError, errorCode } from '@/lib/api'
+import { SESSION_ENDED_KEY } from '@/lib/query-client'
 
 export type SystemRole = 'USER' | 'SUPPORT' | 'SUPER_ADMIN'
 
@@ -8,20 +9,30 @@ export type SessionUser = {
   email: string
   name: string
   systemRole: SystemRole
+  avatarUrl: string | null
 }
 
 /** Body of POST /auth/sign-in and GET /auth/me; `next` says whether the email is verified. */
 export type AuthResult = {
-  user: { id: string; email: string; fullName: string; systemRole: SystemRole }
+  user: {
+    id: string
+    email: string
+    fullName: string
+    systemRole: SystemRole
+    avatarUrl?: string | null
+  }
   next: 'home' | 'verify-email'
 }
 
 export function toSessionUser({ user }: AuthResult): SessionUser {
-  return { id: user.id, email: user.email, name: user.fullName, systemRole: user.systemRole }
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.fullName,
+    systemRole: user.systemRole,
+    avatarUrl: user.avatarUrl ?? null,
+  }
 }
-
-/** Key set when a 401 says the session was ended or expired (not a normal logout). */
-export const SESSION_ENDED_KEY = ['session-ended']
 
 /** Current signed-in person, or null when signed out (401). */
 export function useSession() {
