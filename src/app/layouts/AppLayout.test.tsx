@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { createMemoryRouter, RouterProvider } from 'react-router'
@@ -65,5 +65,37 @@ describe('AppLayout Log out', () => {
     expect(router.state.location.pathname).toBe('/signin')
     // The session is seeded as signed out, so a still-valid cookie is not asked about again.
     expect(seen.me).toBe(1)
+  })
+})
+
+describe('AppLayout account button', () => {
+  function home(avatarUrl: string | null) {
+    server.use(
+      http.get(`${API}/auth/me`, () =>
+        HttpResponse.json({ ...ME, user: { ...ME.user, avatarUrl } }),
+      ),
+    )
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <RouterProvider router={createMemoryRouter(routes, { initialEntries: ['/'] })} />
+      </QueryClientProvider>,
+    )
+    return screen.findByRole('button', { name: 'Ann Lee' })
+  }
+
+  it('shows initials next to the name without a photo', async () => {
+    const account = await home(null)
+    expect(account).toHaveTextContent('AL')
+    expect(within(account).queryByRole('img', { hidden: true })).not.toBeInTheDocument()
+  })
+
+  it('shows the photo when the person has one', async () => {
+    const account = await home('/api/v1/users/me/avatar?v=3')
+    expect(within(account).getByRole('img', { hidden: true })).toHaveAttribute(
+      'src',
+      new URL('/api/v1/users/me/avatar?v=3', API).href,
+    )
   })
 })

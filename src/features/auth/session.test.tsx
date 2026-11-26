@@ -4,7 +4,8 @@ import { http, HttpResponse } from 'msw'
 import type { ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { server } from '@/test/server'
-import { SESSION_ENDED_KEY, useSession } from './session'
+import { SESSION_ENDED_KEY } from '@/lib/query-client'
+import { useSession } from './session'
 
 const API = import.meta.env.VITE_API_BASE_URL
 
@@ -21,7 +22,13 @@ describe('useSession', () => {
     server.use(
       http.get(`${API}/auth/me`, () =>
         HttpResponse.json({
-          user: { id: 'u1', email: 'a@b.co', fullName: 'An', systemRole: 'USER' },
+          user: {
+            id: 'u1',
+            email: 'a@b.co',
+            fullName: 'An',
+            systemRole: 'USER',
+            avatarUrl: '/api/v1/users/me/avatar?v=1',
+          },
           next: 'home',
         }),
       ),
@@ -33,6 +40,7 @@ describe('useSession', () => {
         email: 'a@b.co',
         name: 'An',
         systemRole: 'USER',
+        avatarUrl: '/api/v1/users/me/avatar?v=1',
       }),
     )
   })
