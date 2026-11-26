@@ -41,15 +41,15 @@ No NEEDS CLARIFICATION items remain (see [research.md](./research.md)).
 
 `.specify/memory/constitution.md` is still the unfilled template, so the gates come from `AGENTS.md` and `.claude/rules/`:
 
-| Gate | Status |
-|------|--------|
-| Server state through TanStack Query + `src/lib/api.ts`, no direct `fetch` | Pass: `logOut()` uses `api()` |
-| Logout is POST only | Pass |
-| Permissions enforced by the server; client only steers navigation | Pass: the server revokes the session; the client only forgets it |
-| Labels verbatim from the spec, no invented wording | Pass: `Log out`, no new message (failure is silent, the spec defines none) |
-| Feature does not import another feature's internals | Pass: `AppLayout` (in `src/app/`) imports from `features/auth` as it already does |
-| Out-of-scope items (logout-all, dark mode, i18n) not built | Pass |
-| Tests: component test for the flow + e2e for an auth-flow change | Planned |
+| Gate                                                                      | Status                                                                            |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Server state through TanStack Query + `src/lib/api.ts`, no direct `fetch` | Pass: `logOut()` uses `api()`                                                     |
+| Logout is POST only                                                       | Pass                                                                              |
+| Permissions enforced by the server; client only steers navigation         | Pass: the server revokes the session; the client only forgets it                  |
+| Labels verbatim from the spec, no invented wording                        | Pass: `Log out`, no new message (failure is silent, the spec defines none)        |
+| Feature does not import another feature's internals                       | Pass: `AppLayout` (in `src/app/`) imports from `features/auth` as it already does |
+| Out-of-scope items (logout-all, dark mode, i18n) not built                | Pass                                                                              |
+| Tests: component test for the flow + e2e for an auth-flow change          | Planned                                                                           |
 
 Re-check after Phase 1: unchanged, all pass.
 

@@ -28,7 +28,9 @@ async function signedInHome(respond: () => Response) {
   )
   const router = createMemoryRouter(routes, { initialEntries: ['/'] })
   render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
       <RouterProvider router={router} />
     </QueryClientProvider>,
   )

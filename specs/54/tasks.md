@@ -22,7 +22,7 @@ None. Worktree, dependencies and test tooling (Vitest + MSW in `src/test/server.
 
 ## Phase 2: Foundational
 
-- [X] T001 Add `logOut()` to `src/features/auth/api.ts`: `/** POST /auth/logout. 204, idempotent; clears the session and CSRF cookies. */ export function logOut() { return api<void>('/auth/logout', { method: 'POST' }) }`. No body (do not use the `post` helper, which sends JSON). Logout is POST only.
+- [x] T001 Add `logOut()` to `src/features/auth/api.ts`: `/** POST /auth/logout. 204, idempotent; clears the session and CSRF cookies. */ export function logOut() { return api<void>('/auth/logout', { method: 'POST' }) }`. No body (do not use the `post` helper, which sends JSON). Logout is POST only.
 
 ---
 
@@ -34,14 +34,14 @@ None. Worktree, dependencies and test tooling (Vitest + MSW in `src/test/server.
 
 ### Tests
 
-- [X] T002 [P] [US1] Create `src/app/layouts/AppLayout.test.tsx`. Render `routes` from `src/app/router.tsx` in `createMemoryRouter` at `/` with a fresh `QueryClient({ defaultOptions: { queries: { retry: false } } })` (same pattern as `src/app/guards.test.tsx`). MSW: `GET ${API}/auth/me` → 200 with an `AuthResult` body (`{ user: { id, email, fullName: 'Ann Lee', systemRole: 'USER' }, next: 'home' }`). Open the account menu (`getByRole('button', { name: 'Ann Lee' })`), click `getByRole('menuitem', { name: 'Log out' })`. Cases:
+- [x] T002 [P] [US1] Create `src/app/layouts/AppLayout.test.tsx`. Render `routes` from `src/app/router.tsx` in `createMemoryRouter` at `/` with a fresh `QueryClient({ defaultOptions: { queries: { retry: false } } })` (same pattern as `src/app/guards.test.tsx`). MSW: `GET ${API}/auth/me` → 200 with an `AuthResult` body (`{ user: { id, email, fullName: 'Ann Lee', systemRole: 'USER' }, next: 'home' }`). Open the account menu (`getByRole('button', { name: 'Ann Lee' })`), click `getByRole('menuitem', { name: 'Log out' })`. Cases:
   1. `POST ${API}/auth/logout` → 204: exactly one POST was sent, carrying the `X-CSRF-Token` header when `document.cookie` has `csrf_token=abc` (cleared in `afterEach`). Then pathname `/signin`, search `''`, the `Sign in` heading is visible, no `status` notice.
   2. `POST /auth/logout` → `HttpResponse.error()` (network error), and a separate case → 500: still lands on `/signin`, and `/auth/me` is not called again after the click (session seeded as `null`, research R2).
-- [X] T003 [P] [US1] Create `e2e/logout.spec.ts`. Mock `http://api.e2e/auth/me` (200 with the `AuthResult` body while signed in, 401 after logout) and `http://api.e2e/auth/logout` → 204. Go to `/`, open `Profile` from the account menu, then `Log out`. Assert `toHaveURL(/\/signin$/)` and the `Sign in` heading. `page.goBack()` (reaches `/`, which `RequireAuth` sends to a plain `/signin`): URL matches `/\/signin$/` and Home is not visible.
+- [x] T003 [P] [US1] Create `e2e/logout.spec.ts`. Mock `http://api.e2e/auth/me` (200 with the `AuthResult` body while signed in, 401 after logout) and `http://api.e2e/auth/logout` → 204. Go to `/`, open `Profile` from the account menu, then `Log out`. Assert `toHaveURL(/\/signin$/)` and the `Sign in` heading. `page.goBack()` (reaches `/`, which `RequireAuth` sends to a plain `/signin`): URL matches `/\/signin$/` and Home is not visible.
 
 ### Implementation
 
-- [X] T004 [US1] In `src/app/layouts/AppLayout.tsx`, rewrite the handler (depends on T001):
+- [x] T004 [US1] In `src/app/layouts/AppLayout.tsx`, rewrite the handler (depends on T001):
   ```ts
   const handleLogOut = async () => {
     await logOut().catch(() => {}) // sign out locally even when the request fails
@@ -51,7 +51,7 @@ None. Worktree, dependencies and test tooling (Vitest + MSW in `src/test/server.
   }
   ```
   Import `logOut` from `@/features/auth/api`, drop the direct `api` import, keep the label `Log out` verbatim. `queryClient.clear()` also removes `SESSION_ENDED_KEY`, so no "You were signed out." notice (decision #32).
-- [X] T005 [US1] Run `pnpm test src/app/layouts/AppLayout.test.tsx` and `pnpm e2e e2e/logout.spec.ts`; fix until both exit 0.
+- [x] T005 [US1] Run `pnpm test src/app/layouts/AppLayout.test.tsx` and `pnpm e2e e2e/logout.spec.ts`; fix until both exit 0.
 
 **Checkpoint**: Logout meets all three frontend ACs.
 
@@ -59,9 +59,9 @@ None. Worktree, dependencies and test tooling (Vitest + MSW in `src/test/server.
 
 ## Phase 4: Polish & cross-cutting
 
-- [X] T006 Run `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` unpiped (the `checks.mjs` hook records them); all exit 0.
+- [x] T006 Run `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` unpiped (the `checks.mjs` hook records them); all exit 0.
 - [ ] T007 Manual check per `specs/54/quickstart.md` (Manual section) with `pnpm dev` and the backend running; record what was and was not verified.
-- [X] T008 Run the `react-reviewer` agent on the diff; fix Critical and High findings, then rerun T006. (0 Critical; the only High concerned the clean-URL work, now moved out of this ticket.)
+- [x] T008 Run the `react-reviewer` agent on the diff; fix Critical and High findings, then rerun T006. (0 Critical; the only High concerned the clean-URL work, now moved out of this ticket.)
 - [ ] T009 PR **Risk** section: if `POST /auth/logout` fails, the server session stays valid while the client shows Sign in (spec asks for this; no message defined). No pending state on the menu item (Medium review finding, not addressed).
 
 ---

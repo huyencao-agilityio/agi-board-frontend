@@ -13,11 +13,11 @@ pnpm e2e                                   # includes e2e/logout.spec.ts (auth f
 
 Expected: all exit 0.
 
-| Scenario | Test | Expected |
-|----------|------|----------|
-| Click `Log out`, API returns 204 | `AppLayout.test.tsx` | one `POST /auth/logout` with the CSRF header; Sign in screen shown |
-| Click `Log out`, API fails (500 / network error) | `AppLayout.test.tsx` | Sign in screen still shown |
-| Log out, then press Back | `e2e/logout.spec.ts` | URL is exactly `/signin`; Back stays on Sign in, protected page never shown |
+| Scenario                                         | Test                 | Expected                                                                    |
+| ------------------------------------------------ | -------------------- | --------------------------------------------------------------------------- |
+| Click `Log out`, API returns 204                 | `AppLayout.test.tsx` | one `POST /auth/logout` with the CSRF header; Sign in screen shown          |
+| Click `Log out`, API fails (500 / network error) | `AppLayout.test.tsx` | Sign in screen still shown                                                  |
+| Log out, then press Back                         | `e2e/logout.spec.ts` | URL is exactly `/signin`; Back stays on Sign in, protected page never shown |
 
 ## Manual (with the backend running)
 
