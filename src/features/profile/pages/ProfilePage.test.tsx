@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { server } from '@/test/server'
 import type { AccountSession, Profile } from '../api'
 import ProfilePage from './ProfilePage'
@@ -352,21 +352,29 @@ describe('ProfilePage — password (US2)', () => {
   })
 
   it('is still locked after a reload and unlocks when the lock time passes', async () => {
-    renderPage({
-      profile: {
-        ...PROFILE,
-        changePasswordLockedUntil: new Date(Date.now() + 1200).toISOString(),
-      },
-    })
-    const user = userEvent.setup()
-    await loaded()
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Too many attempts. Try again in 15 minutes.',
-    )
-    await fill(user, 'Oldpass1', 'Newpass22')
-    expect(button('Change password')).toBeDisabled()
-    await waitFor(() => expect(button('Change password')).toBeEnabled(), { timeout: 3000 })
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    // Fake clock: the lock is 15 minutes away, so loading can never race it.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'], shouldAdvanceTime: true })
+    try {
+      renderPage({
+        profile: {
+          ...PROFILE,
+          changePasswordLockedUntil: new Date(Date.now() + 15 * 60_000).toISOString(),
+        },
+      })
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      await loaded()
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Too many attempts. Try again in 15 minutes.',
+      )
+      await fill(user, 'Oldpass1', 'Newpass22')
+      expect(button('Change password')).toBeDisabled()
+
+      await act(() => vi.advanceTimersByTimeAsync(15 * 60_000))
+      expect(button('Change password')).toBeEnabled()
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('is not locked when the backend sends no lock field', async () => {

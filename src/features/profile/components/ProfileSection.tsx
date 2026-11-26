@@ -1,4 +1,7 @@
-import { useRef, useState, type ChangeEvent, type SubmitEvent } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useRef, useState, type ChangeEvent } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
+import { z } from 'zod'
 import { Avatar } from '@/components/common/Avatar'
 import { BTN, FIELD, LABEL } from '@/components/common/form-styles'
 import Spinner from '@/components/common/Spinner'
@@ -14,25 +17,32 @@ const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024
 const PHOTO_ERROR = 'Choose a JPG, PNG or WebP image up to 5 MB.'
 
+// At least one non-space character, no maximum length, trimmed on save (decisions #36, #102).
+const schema = z.object({ fullName: z.string().trim().min(1) })
+
 export function ProfileSection({ profile, onStart, onFail }: { profile: Profile } & Report) {
   const save = useUpdateName()
   const upload = useUploadAvatar()
   const remove = useRemoveAvatar()
   // Starts from the saved name; ProfilePage keys this section on it, so a new saved name resets it.
-  const [name, setName] = useState(profile.fullName)
+  const { register, handleSubmit, control, formState } = useForm({
+    resolver: zodResolver(schema),
+    mode: 'onChange',
+    defaultValues: { fullName: profile.fullName },
+  })
+  const name = useWatch({ control, name: 'fullName' })
   const [photoError, setPhotoError] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
 
   const busy = save.isPending || upload.isPending || remove.isPending
-  const trimmed = name.trim()
-  const canSave = trimmed !== '' && trimmed !== profile.fullName && !busy
+  // Typing the saved name back counts as unchanged.
+  const canSave = formState.isValid && name.trim() !== profile.fullName && !busy
 
-  function onSave(e: SubmitEvent) {
-    e.preventDefault()
+  const onSave = handleSubmit((values) => {
     if (!canSave) return
     onStart()
-    save.mutate({ fullName: trimmed }, { onError: onFail })
-  }
+    save.mutate(values, { onError: onFail })
+  })
 
   function onPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -110,13 +120,7 @@ export function ProfileSection({ profile, onStart, onFail }: { profile: Profile 
           <label htmlFor="full-name" className={LABEL}>
             Full name
           </label>
-          <Input
-            id="full-name"
-            className={FIELD}
-            value={name}
-            disabled={busy}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <Input id="full-name" className={FIELD} disabled={busy} {...register('fullName')} />
         </div>
         <div>
           <Button type="submit" className={cn(BTN, 'w-auto')} disabled={!canSave}>
