@@ -31,8 +31,10 @@ Two issues found while testing auth navigation on the frontend.
 - Move `/forgot-password` under `RequireGuest`.
 - `RequireGuest` waits on `isFetched` (like `WaitForSession`), not `isPending`. Otherwise moving `/forgot-password` breaks two things `WaitForSession` handled: its POST needs the CSRF cookie set by the first `GET /auth/me`, and after a failed `/auth/me` a refetch on window focus puts the query back to pending, which would unmount the page and lose what was typed.
 - `/reset-password` stays open to signed-in users (a reset link opened in a signed-in browser must still work). The backend already ends all sessions on reset (`end_reason = 'password_reset'`), so on reset success the frontend must clear the cached session before going to `/signin?notice=password-updated`; otherwise `RequireGuest` sends the user to Home and they get "You were signed out" instead.
+- On `/reset-password`, the expired/used link state hides "Request a new link" for a signed-in person: it points to `/forgot-password`, which now sends them Home with no message. A signed-in person changes the password in Profile instead. They see only "This link has expired or was already used."
 - Update `docs/frontend-init-plan.md` (401 → `/signin` without `?next=`).
-- Update tests: `guards.test.tsx`, `SignInPage.test.tsx` (`?next` cases), e2e that expect `?next=`.
+- Sync the rules that still describe `?next` (`.claude/rules/react.md`, `.claude/rules/security.md`, `.claude/agents/react-reviewer.md`): sign-in always lands on Home; no redirect target from the URL.
+- Update tests: `guards.test.tsx`, `SignInPage.test.tsx` (`?next` cases), `ResetPasswordPage.test.tsx`, e2e that expect `?next=`, and add e2e for the guard change (signed in at each guest URL → Home; session ended → notice).
 
 Out of scope: Google sign-in (already always lands on `/home`).
 
@@ -45,6 +47,7 @@ Out of scope: Google sign-in (already always lands on `/home`).
 - [ ] Signed in, type `/signin`, `/signup`, `/verify-email`, `/forgot-password` → redirected to Home with no auth card flashing.
 - [ ] Signed out on `/forgot-password` after a failed `/auth/me`: refocusing the tab keeps the page and the typed email.
 - [ ] Signed in, open a valid reset link, set new password → lands on `/signin` with "Password updated. Sign in with your new password."; the old session no longer works.
+- [ ] Signed in, open an expired or used reset link → "This link has expired or was already used." with no "Request a new link"; signed out, the link is still shown and opens `/forgot-password`.
 - [ ] Signed out flows (sign in, sign up, verify email, forgot/reset password) unchanged.
 - [ ] lint, typecheck, unit tests, e2e pass.
 
