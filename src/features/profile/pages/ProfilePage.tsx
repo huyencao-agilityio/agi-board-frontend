@@ -39,11 +39,12 @@ export default function ProfilePage() {
 
       <h1 className="text-2xl font-black">Profile</h1>
 
-      {profile.isPending || sessions.isPending ? (
+      {profile.isPending ? (
         <span className="text-muted-foreground" role="status" aria-label="Loading">
           <Spinner />
         </span>
-      ) : profile.data && sessions.data ? (
+      ) : profile.data ? (
+        // Each part waits only for its own data: a sessions failure must not block name or password changes.
         <>
           {/* Keyed: a new saved name (this tab or another) restarts the form from it. */}
           <ProfileSection key={profile.data.fullName} profile={profile.data} {...report} />
@@ -55,7 +56,12 @@ export default function ProfilePage() {
             />
           )}
           <GoogleSection linked={profile.data.googleLinked} />
-          <SessionsSection sessions={sessions.data} {...report} />
+          {sessions.isPending && (
+            <span className="text-muted-foreground" role="status" aria-label="Loading">
+              <Spinner />
+            </span>
+          )}
+          {sessions.data && <SessionsSection sessions={sessions.data} {...report} />}
         </>
       ) : null}
 

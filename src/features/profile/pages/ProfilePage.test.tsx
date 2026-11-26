@@ -116,6 +116,29 @@ describe('ProfilePage', () => {
   })
 })
 
+describe('ProfilePage — partial load failure', () => {
+  it('keeps name, password and Google usable when only the sessions request fails', async () => {
+    server.use(
+      http.get(`${API}/users/me`, () => HttpResponse.json(PROFILE)),
+      http.get(`${API}/auth/sessions`, () => fail(500, 'INTERNAL')),
+    )
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <MemoryRouter>
+          <ProfilePage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC)
+    for (const name of ['Profile', 'Password', 'Google'])
+      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Sessions' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Full name')).toBeEnabled()
+  })
+})
+
 describe('ProfilePage — name and photo (US1)', () => {
   it('keeps Save disabled until the name changes to a valid value', async () => {
     renderPage()
