@@ -14,18 +14,22 @@
 # Profile and Account Settings
 
 ## Overview
+
 Support the following user scenarios and functional requirements:
 
 ## User Value
+
 Implement core functionality to support user workflows and system requirements.
 
 ## Scope
+
 - Display and edit user profile information
 - Manage account security settings
 - Handle password changes
 - Track active sessions
 
 ## Business Rules
+
 - Users can edit full name (at least 1 non-space character required)
 - Default avatar shows user initials
 - Users can upload profile photo
@@ -55,17 +59,21 @@ Implement core functionality to support user workflows and system requirements.
 ## Acceptance Criteria
 
 ### 1. Edit profile information
+
 - [ ] **Given** user opens Profile settings, **When** they view their information, **Then** name, email, and avatar are displayed.
 - [ ] **Given** profile editing enabled, **When** user changes their name, **Then** changes are saved and reflected immediately.
 
 ### 2. Manage account security
+
 - [ ] **Given** account has a password, **When** user opens password section, **Then** current password field appears.
 - [ ] **Given** current password verified, **When** user enters new password meeting requirements, **Then** password is updated and other sessions are signed out.
 
 ### 3. Manage active sessions
+
 - [ ] **Given** user views active sessions, **When** they see the list, **Then** each session shows device/browser info and last active time.
 
 ### 4. From clarifications
+
 - [ ] All acceptance scenarios of `../specs/018-profile-account-settings/spec.md` (User Stories 1–4) pass, except US4 scenario 6.
 - [ ] **Given** this session was signed out elsewhere while Profile is open, **When** the next API request returns 401 / `SESSION_ENDED`, **Then** the person is sent to `/signin?notice=signed-out` and unsaved changes are lost.
 

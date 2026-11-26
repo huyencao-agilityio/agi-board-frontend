@@ -4,17 +4,17 @@ Source of truth: `agi-board-backend/specs/22/contracts/users-me.md` and `auth-ac
 
 All need the session cookie; writes need the CSRF header (added by `api()`). Any request may return 401 `SESSION_ENDED` → handled globally (research R4).
 
-| Call | Request | Success | Errors the UI maps |
-|---|---|---|---|
-| `GET /auth/me` (and sign-in) | — | 200 `{ user, next }`; **`user.avatarUrl` added** | — |
-| `GET /users/me` | — | 200 profile; **`changePasswordLockedUntil` added** | — |
-| `PATCH /users/me` | `{ fullName }` | 200 profile | 400 `VALIDATION_FAILED` → banner (client blocks it first) |
-| `PUT /users/me/avatar` | `FormData` field `file` | 200 profile | 413 `PAYLOAD_TOO_LARGE`, 415 `UNSUPPORTED_IMAGE_TYPE` → invalid-photo inline error |
-| `DELETE /users/me/avatar` | — | 204 | — |
-| `POST /auth/change-password` | `{ currentPassword, newPassword }` | 204 (other sessions ended, current kept) | 400 `CURRENT_PASSWORD_INCORRECT` → inline; **400 `NEW_PASSWORD_SAME_AS_CURRENT`** → same-password inline; 429 `CHANGE_PASSWORD_LOCKED` with **`details.lockedUntil`** → inline + lock until then; 400 `VALIDATION_FAILED` / `PASSWORD_NOT_SET` → banner |
-| `GET /auth/sessions` | — | 200 `{ items: Session[] }` | — |
-| `DELETE /auth/sessions/:id` | — | 204 | 404 `SESSION_NOT_FOUND` → refetch list, no banner (already gone); others → banner |
-| `DELETE /auth/sessions` | — | 204 | — |
+| Call                         | Request                            | Success                                            | Errors the UI maps                                                                                                                                                                                                                                      |
+| ---------------------------- | ---------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /auth/me` (and sign-in) | —                                  | 200 `{ user, next }`; **`user.avatarUrl` added**   | —                                                                                                                                                                                                                                                       |
+| `GET /users/me`              | —                                  | 200 profile; **`changePasswordLockedUntil` added** | —                                                                                                                                                                                                                                                       |
+| `PATCH /users/me`            | `{ fullName }`                     | 200 profile                                        | 400 `VALIDATION_FAILED` → banner (client blocks it first)                                                                                                                                                                                               |
+| `PUT /users/me/avatar`       | `FormData` field `file`            | 200 profile                                        | 413 `PAYLOAD_TOO_LARGE`, 415 `UNSUPPORTED_IMAGE_TYPE` → invalid-photo inline error                                                                                                                                                                      |
+| `DELETE /users/me/avatar`    | —                                  | 204                                                | —                                                                                                                                                                                                                                                       |
+| `POST /auth/change-password` | `{ currentPassword, newPassword }` | 204 (other sessions ended, current kept)           | 400 `CURRENT_PASSWORD_INCORRECT` → inline; **400 `NEW_PASSWORD_SAME_AS_CURRENT`** → same-password inline; 429 `CHANGE_PASSWORD_LOCKED` with **`details.lockedUntil`** → inline + lock until then; 400 `VALIDATION_FAILED` / `PASSWORD_NOT_SET` → banner |
+| `GET /auth/sessions`         | —                                  | 200 `{ items: Session[] }`                         | —                                                                                                                                                                                                                                                       |
+| `DELETE /auth/sessions/:id`  | —                                  | 204                                                | 404 `SESSION_NOT_FOUND` → refetch list, no banner (already gone); others → banner                                                                                                                                                                       |
+| `DELETE /auth/sessions`      | —                                  | 204                                                | —                                                                                                                                                                                                                                                       |
 
 Any other failure → banner "Something went wrong. Try again."
 

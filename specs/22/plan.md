@@ -32,15 +32,15 @@ Replace the `ProfilePage` placeholder (`/profile`, WEB-17) with the four section
 
 `.specify/memory/constitution.md` is still the unfilled template, so it sets no gates. The project rules in `AGENTS.md` and `.claude/rules/` act as gates:
 
-| Gate | Status |
-|---|---|
-| Feature does not import another feature's internals | Pass after moving `PasswordInput`, `RuleList`, form styles and `password-rules` to shared folders (research R2) |
-| `src/lib` does not import a feature | Pass after moving `SESSION_ENDED_KEY` into `src/lib` (research R4) |
-| Requests only through `api()` + TanStack Query | Pass (`FormData` is already supported by `api()`) |
-| Colors via tokens, shadcn components, lucide icons | Pass |
-| Labels verbatim from spec; no invented wording | Pass; "Unknown device" (proposed) confirmed by the user (research R6) |
-| Sign-in never takes a redirect target from the URL | Pass (clarification 2) |
-| Tests: component tests per form + server error; e2e when auth flow changes | Planned ([quickstart.md](./quickstart.md)) |
+| Gate                                                                       | Status                                                                                                          |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Feature does not import another feature's internals                        | Pass after moving `PasswordInput`, `RuleList`, form styles and `password-rules` to shared folders (research R2) |
+| `src/lib` does not import a feature                                        | Pass after moving `SESSION_ENDED_KEY` into `src/lib` (research R4)                                              |
+| Requests only through `api()` + TanStack Query                             | Pass (`FormData` is already supported by `api()`)                                                               |
+| Colors via tokens, shadcn components, lucide icons                         | Pass                                                                                                            |
+| Labels verbatim from spec; no invented wording                             | Pass; "Unknown device" (proposed) confirmed by the user (research R6)                                           |
+| Sign-in never takes a redirect target from the URL                         | Pass (clarification 2)                                                                                          |
+| Tests: component tests per form + server error; e2e when auth flow changes | Planned ([quickstart.md](./quickstart.md))                                                                      |
 
 Re-check after design: no violations; Complexity Tracking empty.
 
