@@ -34,23 +34,28 @@ export const routes: RouteObject[] = [
       { path: 'sign-in', element: <Redirect to="/signin" /> },
       { path: 'home', element: <Redirect to="/" /> },
       { path: 'status', element: <StatusPage /> }, // technical page, outside the auth guards
+      // Guards above AuthLayout: no empty card while the session loads or before a redirect.
       {
-        element: <AuthLayout />,
+        element: <RequireGuest />,
         children: [
           {
-            element: <RequireGuest />,
+            element: <AuthLayout />,
             children: [
               { path: 'signin', element: <SignInPage /> }, // WEB-01
               { path: 'signup', element: <SignUpPage /> }, // WEB-02
               { path: 'verify-email', element: <VerifyEmailPage /> }, // WEB-16
+              { path: 'forgot-password', element: <ForgotPasswordPage /> }, // WEB-14
             ],
           },
+        ],
+      },
+      {
+        // A reset link must work in a signed-in browser too.
+        element: <WaitForSession />,
+        children: [
           {
-            element: <WaitForSession />,
-            children: [
-              { path: 'forgot-password', element: <ForgotPasswordPage /> }, // WEB-14
-              { path: 'reset-password', element: <ResetPasswordPage /> }, // WEB-15
-            ],
+            element: <AuthLayout />,
+            children: [{ path: 'reset-password', element: <ResetPasswordPage /> }], // WEB-15
           },
         ],
       },
@@ -93,7 +98,7 @@ export const routes: RouteObject[] = [
                   },
                 ],
               },
-              { path: '*', element: <PageNotAvailable />, handle: { notFound: true } }, // WEB-13
+              { path: '*', element: <PageNotAvailable /> }, // WEB-13
             ],
           },
         ],

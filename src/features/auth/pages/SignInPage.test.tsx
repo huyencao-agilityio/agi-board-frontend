@@ -82,16 +82,12 @@ describe('SignInPage', () => {
     document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT'
   })
 
-  it.each([
-    ['/b/x', 'Board'],
-    ['//evil.com', 'Home'],
-    ['https://evil.com', 'Home'],
-  ])('after sign-in goes to ?next=%s -> %s', async (target, page) => {
+  it('always lands on Home after sign-in, ignoring an old ?next', async () => {
     server.use(http.post(`${API}/auth/sign-in`, () => HttpResponse.json(RESULT('home'))))
-    const user = setup(`/signin?next=${encodeURIComponent(target)}`)
+    const user = setup('/signin?next=%2Fb%2Fx')
     await fill(user)
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
-    expect(await screen.findByText(page)).toBeInTheDocument()
+    expect(await screen.findByText('Home')).toBeInTheDocument()
   })
 
   it('locks the inputs and shows a busy button while signing in', async () => {
@@ -168,9 +164,9 @@ describe('SignInPage', () => {
     ['google_failed', 'Google sign-in failed. Try again.'],
     ['account_deactivated', 'This account has been deactivated. Contact your administrator.'],
   ])('shows the banner for ?error=%s and takes it out of the URL', (error, text) => {
-    setup(`/signin?next=%2Fb%2Fx&error=${error}`)
+    setup(`/signin?notice=signed-out&error=${error}`)
     expect(screen.getByRole('alert')).toHaveTextContent(text)
-    expect(screen.getByTestId('search')).toHaveTextContent(/^\?next=%2Fb%2Fx$/)
+    expect(screen.getByTestId('search')).toHaveTextContent(/^\?notice=signed-out$/)
   })
 
   it('toggles password visibility and shows notices', async () => {
