@@ -57,7 +57,6 @@ export default function SignInPage() {
     defaultValues: { email: '', password: '' },
   })
 
-  const next = params.get('next')
   const notice = NOTICES[params.get('notice') ?? '']
   const [banner, setBanner] = useState<string | null>(URL_ERRORS[params.get('error') ?? ''] ?? null)
   const busy = login.isPending
@@ -82,8 +81,7 @@ export default function SignInPage() {
             state: newVerifyState(res.user.email),
           })
         }
-        // Only same-site paths: a "//host" or absolute next would be an open redirect.
-        navigate(next && /^\/(?!\/)/.test(next) ? next : '/', { replace: true })
+        navigate('/', { replace: true })
       },
       onError: (e) => setBanner(errorMessage(e)),
     })

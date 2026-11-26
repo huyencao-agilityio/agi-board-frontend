@@ -25,7 +25,7 @@ Lint is oxlint (`.oxlintrc.json`). It enforces `rules-of-hooks` only: there is n
 - Token, session id or user data stored in `localStorage`, `sessionStorage` or IndexedDB.
 - Logout not `POST`, or logout that does not call `queryClient.clear()`.
 - UI that reveals whether an email has an account (sign-up, password reset and lockout must read the same for every address).
-- Redirect to `next` without checking that it is a same-origin path (starts with `/`, not `//`).
+- A redirect target taken from the URL (e.g. `?next=`); sign-in always lands on Home. If one is ever added, it must be a same-origin path (starts with `/`, not `//`).
 - `dangerouslySetInnerHTML`, or `href`/`src` built from user input without blocking `javascript:` and `data:`.
 - A secret in a `VITE_*` variable (everything `VITE_*` ships to the browser).
 - Permission logic the client treats as enforcement: the client may only hide or disable controls.
