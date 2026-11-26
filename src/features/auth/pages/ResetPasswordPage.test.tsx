@@ -39,6 +39,8 @@ function setup(hash = '#token=tok') {
   const client = new QueryClient({
     defaultOptions: { queries: { ...appClient.getDefaultOptions().queries, retry: false } },
   })
+  // In the app WaitForSession has loaded the session before this page renders.
+  client.setQueryData(['session'], null)
   const router = createMemoryRouter(
     [
       { path: '/reset-password', element: <ResetPasswordPage /> },
@@ -97,6 +99,14 @@ describe('ResetPasswordPage link', () => {
     await waitFor(() => expect(router.state.location.hash).toBe(''))
     await user.click(screen.getByRole('link', { name: 'Request a new link' }))
     expect(screen.getByText('Forgot page')).toBeVisible()
+  })
+
+  it('offers no new link to a signed-in person, whom /forgot-password would send Home', async () => {
+    checkRoute(invalidLink)
+    const { client } = setup()
+    client.setQueryData(['session'], { id: 'u1' })
+    expect(await screen.findByRole('alert')).toHaveTextContent(EXPIRED)
+    expect(screen.queryByRole('link', { name: 'Request a new link' })).not.toBeInTheDocument()
   })
 
   it.each([

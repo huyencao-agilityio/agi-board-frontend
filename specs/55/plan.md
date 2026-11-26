@@ -40,7 +40,9 @@ Re-check after design: same result.
 | `e2e/smoke.spec.ts`                           | `/b/some-board` → `/signin$`; the "/ without ?next" test becomes redundant, merge or keep.                                                                                                                                                                                                                             |
 | `../docs/frontend-init-plan.md` (parent repo) | Line 134: `401 → /signin` without `(kèm ?next=)`; line 180 mentions the old e2e, leave as history or reword. Separate commit in `agi-board`.                                                                                                                                                                           |
 
-Unchanged on purpose: `useResetPassword`, `ResetPasswordPage`, `e2e/password-reset.spec.ts` (already covers "signed-in person ends on Sign in, not Home").
+Unchanged on purpose: `useResetPassword`, `e2e/password-reset.spec.ts` (already covers "signed-in person ends on Sign in, not Home").
+
+Follow-up from PR review: `ResetPasswordPage` hides "Request a new link" (expired/used link state) for a signed-in person. It points to `/forgot-password`, which now sends them Home with no message; a signed-in person changes the password in Profile (F-02) instead. They see only "This link has expired or was already used."
 
 ## Project Structure
 

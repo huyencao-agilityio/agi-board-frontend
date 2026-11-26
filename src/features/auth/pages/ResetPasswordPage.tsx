@@ -9,6 +9,7 @@ import { BTN, LABEL, LINK } from '@/features/auth/components/styles'
 import { useResetLink, useResetPassword } from '@/features/auth/hooks'
 import { MESSAGES } from '@/features/auth/messages'
 import { isValidPassword, passwordRules } from '@/features/auth/password-rules'
+import { useSession } from '@/features/auth/session'
 import { errorCode } from '@/lib/api'
 
 // WEB-15 Reset password. Opened from the emailed link: /reset-password#token=...
@@ -32,6 +33,7 @@ function ResetPassword({ token }: { token: string }) {
   const navigate = useNavigate()
   const link = useResetLink(token)
   const reset = useResetPassword()
+  const { data: user } = useSession()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [confirmLeft, setConfirmLeft] = useState(false)
@@ -75,11 +77,14 @@ function ResetPassword({ token }: { token: string }) {
           <div role="alert" className={ALERT}>
             This link has expired or was already used.
           </div>
-          <p className="text-center">
-            <Link to="/forgot-password" className={LINK}>
-              Request a new link
-            </Link>
-          </p>
+          {/* /forgot-password is for guests (a signed-in person changes the password in Profile), so no link it would bounce. */}
+          {!user && (
+            <p className="text-center">
+              <Link to="/forgot-password" className={LINK}>
+                Request a new link
+              </Link>
+            </p>
+          )}
         </>
       ) : email === undefined ? (
         link.isPending && (
