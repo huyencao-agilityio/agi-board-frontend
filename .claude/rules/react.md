@@ -19,7 +19,7 @@ Structure and the "sources of truth" are in `CLAUDE.md`; this file is how to app
 - Auth gating uses the existing guards (`RequireAuth`, `RequireGuest`, `RequireSystemRole`); do not re-check the session inside pages.
 - Ids come from the URL (`useParams`); state that should survive reload or be shareable (open card, filters, tab) belongs in the URL, not in component state.
 - Missing or forbidden resources show WEB-13 through `RouteError` (403/404 `ApiError` thrown from a query). Do not render a custom "not found" per page.
-- Redirect after sign-in only to a same-origin path from `next` (starts with `/`, not `//`).
+- Sign-in always lands on Home; do not take a redirect target from the URL. If one is ever added, allow only same-origin paths (start with `/`, not `//`).
 
 ## Server state (TanStack Query)
 

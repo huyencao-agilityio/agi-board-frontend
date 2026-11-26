@@ -55,6 +55,8 @@ None. US1 and US2 touch different parts of `guards.tsx` but share no new code.
 - [x] T012 Run `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` unpiped in the worktree; fix until all pass.
 - [x] T013 [P] In the parent repo, `../docs/frontend-init-plan.md` line 134: change `401 → về /signin (kèm ?next=)` to `401 → về /signin`. Leave line 180 (dated history). Separate commit in `agi-board`, not in this PR.
 - [x] T014 Run the `react-reviewer` agent on the diff; fix Critical and High findings, then `/create-pr`.
+- [x] T015 [P] Add e2e for the guard change (`.claude/rules/testing.md`: route or guard change needs e2e) in `e2e/smoke.spec.ts`: signed in at `/signin`, `/signup`, `/verify-email`, `/forgot-password` → `/`; 401 `SESSION_ENDED` → `/signin?notice=signed-out` with the notice.
+- [x] T016 [P] Sync the rules that still described `?next`: `.claude/rules/react.md`, `.claude/rules/security.md`, `.claude/agents/react-reviewer.md`.
 
 ## Dependencies
 

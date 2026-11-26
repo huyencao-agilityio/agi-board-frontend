@@ -32,7 +32,7 @@ The server enforces every rule; the client must not weaken it or leak data. If a
 
 - Render user text (card titles, descriptions, comments, names) as React text. No `dangerouslySetInnerHTML`; if Markdown is needed later, use a sanitising renderer and ask first.
 - Links from user content: only `http:`/`https:` URLs, with `rel="noopener noreferrer"` on `target="_blank"`. Never put user input in `href="javascript:..."`, `eval`, `new Function` or inline styles built from strings.
-- Redirect targets (`?next=`) must be same-origin paths (start with `/`, not `//`).
+- No redirect target from the URL (sign-in always lands on Home). If one is ever added, allow only same-origin paths (start with `/`, not `//`).
 
 ## Files
 

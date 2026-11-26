@@ -15,6 +15,31 @@ test('signed-out visitor is sent to Sign in', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
 })
 
+test('a session ended without logout says so on Sign in', async ({ page }) => {
+  await page.route('http://api.e2e/auth/me', (route) =>
+    route.fulfill({ status: 401, json: { error: { code: 'SESSION_ENDED' } } }),
+  )
+  await page.goto('/b/some-board')
+  await expect(page).toHaveURL(/\/signin\?notice=signed-out$/)
+  await expect(page.getByRole('status')).toHaveText('You were signed out. Sign in again.')
+})
+
+for (const path of ['/signin', '/signup', '/verify-email', '/forgot-password']) {
+  test(`a signed-in person opening ${path} lands on Home`, async ({ page }) => {
+    await page.route('http://api.e2e/auth/me', (route) =>
+      route.fulfill({
+        json: {
+          user: { id: 'u1', email: 'ann@example.com', fullName: 'Ann Lee', systemRole: 'USER' },
+          next: 'home',
+        },
+      }),
+    )
+    await page.goto(path)
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible()
+  })
+}
+
 test('Google callback error shows on the form and leaves the URL', async ({ page }) => {
   await page.route('http://api.e2e/auth/me', (route) => route.fulfill({ status: 401, json: {} }))
   await page.goto('/sign-in?error=google_failed')
