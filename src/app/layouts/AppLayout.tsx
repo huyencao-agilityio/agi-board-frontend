@@ -7,8 +7,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { logOut } from '@/features/auth/api'
 import { useSession } from '@/features/auth/session'
-import { api } from '@/lib/api'
 
 // Shared header. Search, Create and Notifications are added in their sprints (F-10, F-05, F-11).
 export default function AppLayout() {
@@ -17,9 +17,12 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const isSystemAdmin = user?.systemRole === 'SUPPORT' || user?.systemRole === 'SUPER_ADMIN'
 
-  const logOut = async () => {
-    await api('/auth/logout', { method: 'POST' }) // logout is POST only (proposal 7.3)
+  const handleLogOut = async () => {
+    // Sign out locally even when the request fails; only the server can clear the httpOnly cookie.
+    await logOut().catch(() => {})
     queryClient.clear()
+    // Signed out without refetching /auth/me: a still-valid cookie must not bounce the user back in.
+    queryClient.setQueryData(['session'], null)
     navigate('/signin', { replace: true })
   }
 
@@ -42,7 +45,7 @@ export default function AppLayout() {
                 <Link to="/admin/users">Admin console</Link>
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onSelect={logOut}>Log out</DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleLogOut}>Log out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>

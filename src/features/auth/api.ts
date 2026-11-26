@@ -34,6 +34,11 @@ export function checkResetLink(body: { token: string }) {
   return post<{ email: string }>('/auth/reset-password/check', body)
 }
 
+/** POST /auth/logout. 204, also for an already-ended session; clears the session and CSRF cookies. */
+export function logOut() {
+  return api<void>('/auth/logout', { method: 'POST' })
+}
+
 /** POST /auth/reset-password. Ends every session of the account. Codes: RESET_LINK_INVALID, VALIDATION_FAILED (the link stays valid). */
 export function resetPassword(body: { token: string; password: string }) {
   return post<{ next: 'sign-in' }>('/auth/reset-password', body)
