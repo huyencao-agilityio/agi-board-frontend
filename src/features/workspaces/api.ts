@@ -56,6 +56,18 @@ export const getWorkspace = (workspaceId: string) =>
 export const createWorkspace = (body: { name: string }) =>
   api<WorkspaceTile>('/workspaces', { method: 'POST', body: JSON.stringify(body) })
 
+export type BoardVisibility = BoardTile['visibility']
+
+// Backend card #23 (agi-board-backend specs/23/contracts/boards.md).
+export const createBoard = (
+  workspaceId: string,
+  body: { name: string; visibility: BoardVisibility },
+) =>
+  api<BoardTile>(`/workspaces/${id(workspaceId)}/boards`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+
 export const starBoard = (boardId: string) =>
   api<void>(`/boards/${id(boardId)}/star`, { method: 'PUT' })
 

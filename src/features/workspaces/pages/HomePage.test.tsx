@@ -627,3 +627,202 @@ describe('HomePage pending invites (US4)', () => {
     expect(screen.getByText(EMPTY_TEXT)).toBeInTheDocument()
   })
 })
+
+describe('HomePage Create board (#23)', () => {
+  const ADMIN = workspace('w1', 'Marketing', { role: 'admin' })
+
+  /** `POST /workspaces/:id/boards` that records each request and answers with `respond`. */
+  function serveCreate(
+    respond: () => Response | Promise<Response> = () =>
+      HttpResponse.json(board('b9', 'Roadmap'), { status: 201 }),
+  ) {
+    const seen: { path: string; body: unknown; csrf: string | null }[] = []
+    server.use(
+      http.post(`${API}/workspaces/:workspaceId/boards`, async ({ request }) => {
+        seen.push({
+          path: new URL(request.url).pathname,
+          body: await request.json(),
+          csrf: request.headers.get('X-CSRF-Token'),
+        })
+        return respond()
+      }),
+    )
+    return seen
+  }
+
+  async function openDialog(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: 'Create new board' }))
+    return screen.getByRole('dialog', { name: 'Create board' })
+  }
+
+  it('shows the tile only in workspaces the person administers, also when empty (019 FR-011)', async () => {
+    serveHome(
+      home({
+        workspaces: [
+          ADMIN,
+          workspace('w2', 'Sales', { role: 'member', boards: [board('b1', 'Pipeline')] }),
+          workspace('w3', 'Lab', {
+            role: null,
+            memberCount: null,
+            boards: [board('b2', 'Mentor')],
+          }),
+        ],
+      }),
+    )
+    renderHome()
+    const tiles = await within(content()).findAllByRole('button', { name: 'Create new board' })
+    expect(tiles).toHaveLength(1)
+    const section = within(content())
+      .getByRole('heading', { level: 3, name: 'Marketing' })
+      .closest('section') as HTMLElement
+    expect(within(section).getByRole('button', { name: 'Create new board' })).toBe(tiles[0])
+  })
+
+  it('opens with an empty title, the workspace read-only, Workspace selected and Create disabled', async () => {
+    serveHome(home({ workspaces: [ADMIN] }))
+    const { user } = renderHome()
+    const dialog = await openDialog(user)
+    const title = within(dialog).getByLabelText('Board title')
+    expect(title).toHaveValue('')
+    expect(title).toHaveFocus()
+    const ws = within(dialog).getByRole('textbox', { name: 'Workspace' })
+    expect(ws).toHaveValue('Marketing')
+    expect(ws).toHaveAttribute('readonly')
+    expect(within(dialog).queryByRole('combobox')).not.toBeInTheDocument()
+    expect(within(dialog).getByRole('radio', { name: 'Workspace' })).toBeChecked()
+    expect(within(dialog).getByRole('radio', { name: 'Private' })).not.toBeChecked()
+    expect(within(dialog).getByRole('button', { name: 'Create' })).toBeDisabled()
+  })
+
+  it('flags a blank title and enables Create once a title is typed', async () => {
+    serveHome(home({ workspaces: [ADMIN] }))
+    const { user } = renderHome()
+    const dialog = await openDialog(user)
+    const title = within(dialog).getByLabelText('Board title')
+    const create = within(dialog).getByRole('button', { name: 'Create' })
+
+    await user.type(title, '   ')
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Enter a board title.')
+    expect(title).toHaveAttribute('aria-invalid', 'true')
+    expect(create).toBeDisabled()
+    await user.type(title, 'x')
+    expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument()
+    expect(create).toBeEnabled()
+  })
+
+  it('creates the trimmed title with the CSRF header and opens the new board', async () => {
+    document.cookie = 'csrf_token=abc'
+    serveHome(home({ workspaces: [ADMIN] }))
+    const seen = serveCreate()
+    const { user } = renderHome()
+    const dialog = await openDialog(user)
+    await user.type(within(dialog).getByLabelText('Board title'), '  Roadmap  ')
+    await user.dblClick(within(dialog).getByRole('button', { name: 'Create' }))
+    expect(await screen.findByText('at /b/b9')).toBeInTheDocument()
+    expect(seen).toEqual([
+      {
+        path: '/workspaces/w1/boards',
+        body: { name: 'Roadmap', visibility: 'workspace' },
+        csrf: 'abc',
+      },
+    ])
+  })
+
+  it('accepts a very long title (no length limit, decision #118)', async () => {
+    serveHome(home({ workspaces: [ADMIN] }))
+    const seen = serveCreate()
+    const { user } = renderHome()
+    const dialog = await openDialog(user)
+    await user.click(within(dialog).getByLabelText('Board title'))
+    await user.paste('x'.repeat(500))
+    await user.click(within(dialog).getByRole('button', { name: 'Create' }))
+    expect(await screen.findByText('at /b/b9')).toBeInTheDocument()
+    expect(seen[0].body).toEqual({ name: 'x'.repeat(500), visibility: 'workspace' })
+  })
+
+  it('sends Private when chosen and explains each visibility in a tooltip', async () => {
+    serveHome(home({ workspaces: [ADMIN] }))
+    const seen = serveCreate()
+    const { user } = renderHome()
+    const dialog = await openDialog(user)
+    const workspaceRadio = within(dialog).getByRole('radio', { name: 'Workspace' })
+    const privateRadio = within(dialog).getByRole('radio', { name: 'Private' })
+    expect(workspaceRadio).toHaveAccessibleDescription(
+      'All members of the workspace can see this board.',
+    )
+    expect(privateRadio).toHaveAccessibleDescription('Only board members can see this board.')
+
+    await user.hover(privateRadio)
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Only board members can see this board.',
+    )
+
+    await user.click(privateRadio)
+    await user.type(within(dialog).getByLabelText('Board title'), 'Roadmap')
+    await user.click(within(dialog).getByRole('button', { name: 'Create' }))
+    expect(await screen.findByText('at /b/b9')).toBeInTheDocument()
+    expect(seen[0].body).toEqual({ name: 'Roadmap', visibility: 'private' })
+  })
+
+  it('locks the dialog while creating and ignores Esc (decision #120)', async () => {
+    serveHome(home({ workspaces: [ADMIN] }))
+    const seen = serveCreate(async () => {
+      await delay('infinite')
+      return HttpResponse.json({})
+    })
+    const { user } = renderHome()
+    const dialog = await openDialog(user)
+    await user.type(within(dialog).getByLabelText('Board title'), 'Roadmap')
+    await user.click(within(dialog).getByRole('button', { name: 'Create' }))
+
+    expect(within(dialog).getByRole('button', { name: 'Creating board' })).toBeDisabled()
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled()
+    expect(within(dialog).getByLabelText('Board title')).toHaveAttribute('readonly')
+    expect(within(dialog).getByRole('radio', { name: 'Private' })).toBeDisabled()
+    await user.keyboard('{Escape}')
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(seen).toHaveLength(1)
+  })
+
+  it('keeps the values and shows the banner when creating fails, also while editing', async () => {
+    serveHome(home({ workspaces: [ADMIN] }))
+    serveCreate(() => fail(403, 'BOARD_CREATE_FORBIDDEN'))
+    const { user } = renderHome()
+    const dialog = await openDialog(user)
+    const title = within(dialog).getByLabelText('Board title')
+    await user.type(title, 'Roadmap')
+    await user.click(within(dialog).getByRole('radio', { name: 'Private' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Create' }))
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(GENERIC)
+    expect(title).toHaveValue('Roadmap')
+    expect(within(dialog).getByRole('radio', { name: 'Private' })).toBeChecked()
+    expect(within(dialog).getByRole('button', { name: 'Create' })).toBeEnabled()
+    await user.type(title, ' 2')
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(GENERIC) // 019 AS4.4
+  })
+
+  it('closes on Cancel or Esc without creating, and reopens clean', async () => {
+    serveHome(home({ workspaces: [ADMIN] }))
+    const seen = serveCreate(() => fail(500, 'INTERNAL'))
+    const { user, router } = renderHome()
+    let dialog = await openDialog(user)
+    await user.type(within(dialog).getByLabelText('Board title'), 'Roadmap')
+    await user.click(within(dialog).getByRole('radio', { name: 'Private' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Create' }))
+    await within(dialog).findByRole('alert')
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Create new board' })).toHaveFocus()
+    expect(router.state.location.pathname).toBe('/')
+
+    dialog = await openDialog(user)
+    expect(within(dialog).getByLabelText('Board title')).toHaveValue('')
+    expect(within(dialog).getByRole('radio', { name: 'Workspace' })).toBeChecked()
+    expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument()
+    await user.type(within(dialog).getByLabelText('Board title'), 'Draft')
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(seen).toHaveLength(1)
+  })
+})

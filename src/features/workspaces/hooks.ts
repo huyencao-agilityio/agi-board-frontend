@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   acceptInvite,
+  createBoard,
   createWorkspace,
   declineInvite,
   getHome,
@@ -8,6 +9,7 @@ import {
   starBoard,
   unstarBoard,
   type BoardTile,
+  type BoardVisibility,
   type Home,
 } from './api'
 
@@ -30,6 +32,20 @@ export function useCreateWorkspace() {
   return useMutation({
     mutationFn: createWorkspace,
     onSuccess: () => client.invalidateQueries({ queryKey: HOME }),
+  })
+}
+
+export function useCreateBoard(workspaceId: string) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { name: string; visibility: BoardVisibility }) =>
+      createBoard(workspaceId, body),
+    // Not awaited, so the new board opens without waiting for the refetch; on error too, so a lost
+    // admin role or an archived workspace (403/404) drops the stale tile.
+    onSettled: () => {
+      void client.invalidateQueries({ queryKey: HOME })
+      void client.invalidateQueries({ queryKey: ['workspaces', workspaceId] })
+    },
   })
 }
 

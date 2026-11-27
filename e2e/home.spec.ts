@@ -143,3 +143,29 @@ test('Back from a newly created workspace returns to Home without the dialog', a
   await expect(page.getByRole('button', { name: 'Create workspace' })).toBeVisible()
   await expect(dialog).toBeHidden()
 })
+
+test('a workspace admin creates a board from the Home tile and lands on it', async ({ page }) => {
+  const admin = { ...WORKSPACE, role: 'admin' }
+  await signIn(page, { ...HOME, workspaces: [admin] })
+  const posted: unknown[] = []
+  await page.route('http://api.e2e/workspaces/w1/boards', (route) => {
+    posted.push(route.request().postDataJSON())
+    return route.fulfill({ status: 201, json: { ...BOARD, id: 'b9', name: 'Roadmap' } })
+  })
+  await page.route('http://api.e2e/boards/b9/views', (route) => route.fulfill({ status: 204 }))
+  await page.goto('/')
+  const tile = page.getByRole('button', { name: 'Create new board' })
+  const dialog = page.getByRole('dialog', { name: 'Create board' })
+
+  // A click outside closes it without creating anything.
+  await tile.click()
+  await expect(dialog).toBeVisible()
+  await page.mouse.click(5, 5)
+  await expect(dialog).toBeHidden()
+
+  await tile.click()
+  await dialog.getByLabel('Board title').fill('Roadmap')
+  await dialog.getByRole('button', { name: 'Create' }).click()
+  await expect(page).toHaveURL(/\/b\/b9$/)
+  expect(posted).toEqual([{ name: 'Roadmap', visibility: 'workspace' }])
+})

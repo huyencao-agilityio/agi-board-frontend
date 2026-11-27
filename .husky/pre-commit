@@ -1,0 +1,8 @@
+# Same check as CI's `pnpm format:check`, on staged files only. Checks instead of rewriting, so
+# unstaged hunks never get committed by accident. Ignored and unknown files are skipped.
+git diff --cached --name-only --diff-filter=ACMR -z |
+  xargs -0 -r pnpm exec prettier --check --ignore-unknown --log-level warn ||
+  {
+    echo 'Unformatted staged files (listed above). Run `pnpm format`, stage them again, then commit.'
+    exit 1
+  }
