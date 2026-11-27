@@ -14,18 +14,22 @@
 # Create Workspace
 
 ## Overview
+
 Support the following user scenarios and functional requirements:
 
 ## User Value
+
 Implement core functionality to support user workflows and system requirements.
 
 ## Scope
+
 - Trigger create workspace dialog
 - Enter workspace name
 - Create and initialize the workspace
 - Handle errors and validation
 
 ## Business Rules
+
 - The create workspace dialog MUST be accessible from the home page only (not the account menu; see Clarifications)
 - The dialog MUST require a workspace name (non-empty, trimmed)
 - The workspace name MUST be 1–100 characters after trimming; over 100 shows "Use 100 characters or fewer." and keeps Create disabled (decision #379; see Clarifications)
@@ -50,18 +54,22 @@ Implement core functionality to support user workflows and system requirements.
 ## Acceptance Criteria
 
 ### 1. Trigger create workspace dialog
+
 - [ ] **Given** a user on the home page, **When** they click "Create workspace", **Then** the create dialog opens.
 - [ ] **Given** the dialog, **Then** the name field is focused and empty, ready for input.
 
 ### 2. Enter workspace name
+
 - [ ] **Given** the create dialog, **When** the user types a workspace name, **Then** the name is entered and validated.
 - [ ] **Given** a name over 100 characters after trimming, **Then** the inline error "Use 100 characters or fewer." shows and Create stays disabled; 100 characters is accepted.
 - [ ] **Given** a valid name, **When** the user clicks Create, **Then** the workspace is created.
 
 ### 3. No workspace visibility
+
 - [ ] **Given** the create dialog, **Then** it offers no visibility option (only the workspace name).
 
 ### 4. Create and initialize workspace
+
 - [ ] **Given** a valid name, **When** Create is clicked, **Then** the workspace is created and opens.
 - [ ] **Given** the new workspace, **Then** it shows empty with the creator as admin, ready to add boards and members.
 

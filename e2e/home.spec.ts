@@ -103,7 +103,9 @@ test('a new account sees the empty state and no sidebar', async ({ page }) => {
 
 const CREATED = { id: 'w9', name: 'Acme', role: 'admin', boardCount: 0, memberCount: 1, boards: [] }
 
-test('browser Back closes only the Create workspace dialog, also after a reload', async ({ page }) => {
+test('browser Back closes only the Create workspace dialog, also after a reload', async ({
+  page,
+}) => {
   await signIn(page, HOME)
   await page.goto('/')
   const open = page.getByRole('button', { name: 'Create workspace' })

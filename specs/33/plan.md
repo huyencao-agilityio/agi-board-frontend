@@ -38,13 +38,13 @@ This card closes the remaining gaps against spec 029 inside the same component a
 
 `.specify/memory/constitution.md` is an unfilled template, so the gates are `AGENTS.md` and `.claude/rules/`.
 
-| Gate | Status |
-|---|---|
-| Feature layout; no cross-feature internals | PASS: only `features/workspaces/components/CreateWorkspaceDialog.tsx` |
-| Requests through `api()` + TanStack Query | PASS: unchanged `useCreateWorkspace` |
-| Labels verbatim | PASS: "Creating workspace" is the (proposed) text in 029 US5 / WEB-D16 |
-| No out-of-scope features | PASS: no visibility, no account-menu entry, no real-time (spec Clarifications; #6 R7) |
-| Dialog = shadcn `Dialog`, form = RHF + zod | PASS |
+| Gate                                       | Status                                                                                |
+| ------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Feature layout; no cross-feature internals | PASS: only `features/workspaces/components/CreateWorkspaceDialog.tsx`                 |
+| Requests through `api()` + TanStack Query  | PASS: unchanged `useCreateWorkspace`                                                  |
+| Labels verbatim                            | PASS: "Creating workspace" is the (proposed) text in 029 US5 / WEB-D16                |
+| No out-of-scope features                   | PASS: no visibility, no account-menu entry, no real-time (spec Clarifications; #6 R7) |
+| Dialog = shadcn `Dialog`, form = RHF + zod | PASS                                                                                  |
 
 Re-check after Phase 1: PASS; Complexity Tracking empty.
 

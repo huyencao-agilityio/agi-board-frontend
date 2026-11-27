@@ -5,23 +5,23 @@
 - **Decision**: Reuse `CreateWorkspaceDialog` from #6; change only what spec 029 still misses.
 - **Rationale**: Compared each 029 FR with the code and `HomePage.test.tsx`:
 
-| 029 requirement | State |
-|---|---|
-| FR-001/002 Home entry, title, field, buttons | Done (button in every state) |
-| FR-003/004/005 blank and >100 errors, trim, repeats allowed | Done + tested |
-| FR-006/014 create, open `/w/:id`, no toast | Done + tested |
-| FR-007 Cancel / Esc / outside click | Done (Radix); Esc tested only while processing |
-| FR-008 spinner, lock, ignore Esc; one request on double click | Done (submit disabled while pending); double click not tested |
-| FR-009/015 banner, cleared on edit/reopen | Done + tested |
-| FR-012 session ended → WEB-01 | Done globally (`MutationCache` `SESSION_ENDED`); not tested for this dialog |
-| FR-016 focus in field, trapped, returned to trigger; `Enter` | Done (Radix + `autoFocus`); return focus and blank `Enter` not tested |
-| FR-017 line breaks → spaces | Done; not tested |
-| FR-018 spinner text alternative "Creating workspace" | **Gap**: hidden label is "Create" |
-| FR-019 long names one line with "…" + tooltip | Done (`truncate` + `title` on Home, sidebar, WEB-04) |
-| FR-020 Back closes only the dialog; reload without it | **Gap** |
-| FR-021 order A–Z | Done (`byName`) |
-| FR-015 other tabs, real-time | Out of scope (#6 R7); TanStack refetch on window focus refreshes Home when the tab is shown |
-| 029 AS1.8 `Create new board` tile on WEB-04 | Belongs to WEB-D01 / card Create board, not this card |
+| 029 requirement                                               | State                                                                                       |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| FR-001/002 Home entry, title, field, buttons                  | Done (button in every state)                                                                |
+| FR-003/004/005 blank and >100 errors, trim, repeats allowed   | Done + tested                                                                               |
+| FR-006/014 create, open `/w/:id`, no toast                    | Done + tested                                                                               |
+| FR-007 Cancel / Esc / outside click                           | Done (Radix); Esc tested only while processing                                              |
+| FR-008 spinner, lock, ignore Esc; one request on double click | Done (submit disabled while pending); double click not tested                               |
+| FR-009/015 banner, cleared on edit/reopen                     | Done + tested                                                                               |
+| FR-012 session ended → WEB-01                                 | Done globally (`MutationCache` `SESSION_ENDED`); not tested for this dialog                 |
+| FR-016 focus in field, trapped, returned to trigger; `Enter`  | Done (Radix + `autoFocus`); return focus and blank `Enter` not tested                       |
+| FR-017 line breaks → spaces                                   | Done; not tested                                                                            |
+| FR-018 spinner text alternative "Creating workspace"          | **Gap**: hidden label is "Create"                                                           |
+| FR-019 long names one line with "…" + tooltip                 | Done (`truncate` + `title` on Home, sidebar, WEB-04)                                        |
+| FR-020 Back closes only the dialog; reload without it         | **Gap**                                                                                     |
+| FR-021 order A–Z                                              | Done (`byName`)                                                                             |
+| FR-015 other tabs, real-time                                  | Out of scope (#6 R7); TanStack refetch on window focus refreshes Home when the tab is shown |
+| 029 AS1.8 `Create new board` tile on WEB-04                   | Belongs to WEB-D01 / card Create board, not this card                                       |
 
 - **Alternatives considered**: Rebuilding the dialog from the card text: rejected, it would duplicate tested code.
 
