@@ -30,36 +30,39 @@ export default function AppLayout() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="flex h-15 items-center gap-4 border-b bg-card px-6">
-        <Link to="/" className="flex-1 text-lg font-black text-primary-text">
-          AGI Board
-        </Link>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost">
-              {/* Decorative here: the button's name is the person's name. */}
-              {user && (
-                <span aria-hidden="true" className="contents">
-                  <Avatar name={user.name} url={user.avatarUrl} size="sm" />
-                </span>
-              )}
-              {user?.name}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to="/profile">Profile</Link>
-            </DropdownMenuItem>
-            {isSystemAdmin && (
+      <header className="border-b bg-card px-6">
+        {/* Same centered width as the page content (max-w-300), so the header lines up on wide screens. */}
+        <div className="mx-auto flex h-15 w-full max-w-300 items-center gap-4">
+          <Link to="/" className="flex-1 text-lg font-black text-primary-text">
+            AGI Board
+          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost">
+                {/* Decorative here: the button's name is the person's name. */}
+                {user && (
+                  <span aria-hidden="true" className="contents">
+                    <Avatar name={user.name} url={user.avatarUrl} size="sm" />
+                  </span>
+                )}
+                {user?.name}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
               <DropdownMenuItem asChild className="cursor-pointer">
-                <Link to="/admin/users">Admin console</Link>
+                <Link to="/profile">Profile</Link>
               </DropdownMenuItem>
-            )}
-            <DropdownMenuItem className="cursor-pointer" onSelect={handleLogOut}>
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {isSystemAdmin && (
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/admin/users">Admin console</Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem className="cursor-pointer" onSelect={handleLogOut}>
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </header>
       <main className="flex-1 p-6">
         <Outlet />
