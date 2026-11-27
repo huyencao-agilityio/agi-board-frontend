@@ -80,13 +80,13 @@ function Where() {
   return <p>at {useLocation().pathname}</p>
 }
 
-function renderHome() {
+function renderHome(entries: Parameters<typeof createMemoryRouter>[1] = { initialEntries: ['/'] }) {
   const router = createMemoryRouter(
     [
       { path: '/', element: <HomePage /> },
       { path: '*', element: <Where /> },
     ],
-    { initialEntries: ['/'] },
+    entries,
   )
   render(
     <QueryClientProvider
@@ -95,7 +95,7 @@ function renderHome() {
       <RouterProvider router={router} />
     </QueryClientProvider>,
   )
-  return { user: userEvent.setup() }
+  return { user: userEvent.setup(), router }
 }
 
 /** The page content without the Workspace sidebar, which repeats `Your workspaces`. */
@@ -233,24 +233,32 @@ describe('HomePage Create workspace (US2)', () => {
     expect(seen).toEqual([{ body: { name: 'Team A' }, csrf: 'abc' }])
   })
 
-  it('locks the dialog while creating', async () => {
+  it('locks the dialog while creating, ignoring Esc, Enter and browser Back', async () => {
+    let posts = 0
     serveHome(home())
     server.use(
       http.post(`${API}/workspaces`, async () => {
+        posts++
         await delay('infinite')
         return HttpResponse.json({})
       }),
     )
-    const { user } = renderHome()
+    const { user, router } = renderHome()
     await user.click(await screen.findByRole('button', { name: 'Create workspace' }))
     const dialog = screen.getByRole('dialog')
     await user.type(within(dialog).getByLabelText('Workspace name'), 'Team A')
     await user.click(within(dialog).getByRole('button', { name: 'Create' }))
-    expect(within(dialog).getByRole('button', { name: 'Create' })).toBeDisabled()
+    // The spinner button's text alternative (029 FR-018).
+    expect(within(dialog).getByRole('button', { name: 'Creating workspace' })).toBeDisabled()
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled()
     expect(within(dialog).getByLabelText('Workspace name')).toHaveAttribute('readonly')
     await user.keyboard('{Escape}')
     expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await user.type(within(dialog).getByLabelText('Workspace name'), '{Enter}')
+    await router.navigate(-1)
+    await waitFor(() => expect(router.state.location.state).toEqual({ createWorkspace: true }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(posts).toBe(1)
   })
 
   it('refuses a name over 100 characters on the client (AC 1.3, decision #379)', async () => {
@@ -318,6 +326,89 @@ describe('HomePage Create workspace (US2)', () => {
     await user.click(screen.getByRole('button', { name: 'Create workspace' }))
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Workspace name')).toHaveValue('')
+  })
+})
+
+describe('HomePage Create workspace (#33)', () => {
+  const countPosts = () => {
+    const posts: unknown[] = []
+    server.use(
+      http.post(`${API}/workspaces`, async ({ request }) => {
+        posts.push(await request.json())
+        await delay(50)
+        return HttpResponse.json(workspace('w7', 'Team A', { role: 'admin' }), { status: 201 })
+      }),
+    )
+    return posts
+  }
+
+  // Line breaks → spaces (AS2.8) is not tested here: jsdom strips them from an <input> before the handler runs.
+  it('sends one request on a double click', async () => {
+    serveHome(home())
+    const posts = countPosts()
+    const { user } = renderHome()
+    await user.click(await screen.findByRole('button', { name: 'Create workspace' }))
+    await user.type(screen.getByLabelText('Workspace name'), 'Team A')
+    await user.dblClick(screen.getByRole('button', { name: 'Create' }))
+    expect(await screen.findByText('at /w/w7')).toBeInTheDocument()
+    expect(posts).toEqual([{ name: 'Team A' }])
+  })
+
+  it('discards the text on Cancel and Esc and returns focus to the trigger', async () => {
+    serveHome(home())
+    const { user } = renderHome()
+    const trigger = await screen.findByRole('button', { name: 'Create workspace' })
+    await user.click(trigger)
+    await user.type(screen.getByLabelText('Workspace name'), 'Team A')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await waitFor(() => expect(trigger).toHaveFocus())
+
+    await user.click(trigger)
+    expect(screen.getByLabelText('Workspace name')).toHaveValue('')
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('does nothing on Enter while the name was never typed', async () => {
+    serveHome(home())
+    const posts = countPosts()
+    const { user } = renderHome()
+    await user.click(await screen.findByRole('button', { name: 'Create workspace' }))
+    await user.keyboard('{Enter}')
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(posts).toEqual([])
+  })
+
+  it('closes only the dialog on browser Back, and Cancel leaves no extra history entry', async () => {
+    serveHome(home())
+    const { user, router } = renderHome()
+    const trigger = await screen.findByRole('button', { name: 'Create workspace' })
+    await user.click(trigger)
+    await router.navigate(-1)
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(router.state.location.pathname).toBe('/')
+    expect(router.state.location.state).toBeNull()
+
+    await user.click(trigger)
+    expect(router.state.location.state).toEqual({ createWorkspace: true })
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(router.state.location.state).toBeNull())
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('closes on one Back when Home already sits on a dialog entry (after a reload or Forward)', async () => {
+    serveHome(home())
+    const { user, router } = renderHome({
+      initialEntries: ['/', { pathname: '/', state: { createWorkspace: true } }],
+      initialIndex: 1,
+    })
+    await user.click(await screen.findByRole('button', { name: 'Create workspace' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await router.navigate(-1)
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(router.state.location.state).toBeNull()
   })
 })
 
