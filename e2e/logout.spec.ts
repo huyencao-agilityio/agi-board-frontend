@@ -26,6 +26,11 @@ test('Log out opens a plain Sign in and Back does not show the protected page', 
   await page.route('http://api.e2e/auth/sessions', (route) =>
     route.fulfill({ json: { items: [] } }),
   )
+  await page.route('http://api.e2e/home', (route) =>
+    route.fulfill({
+      json: { starred: [], recent: [], workspaces: [], invites: [], hasArchivedWorkspaces: false },
+    }),
+  )
   await page.route('http://api.e2e/auth/logout', (route) => {
     signedIn = false
     return route.fulfill({ status: 204 })

@@ -34,6 +34,17 @@ for (const path of ['/signin', '/signup', '/verify-email', '/forgot-password']) 
         },
       }),
     )
+    await page.route('http://api.e2e/home', (route) =>
+      route.fulfill({
+        json: {
+          starred: [],
+          recent: [],
+          workspaces: [],
+          invites: [],
+          hasArchivedWorkspaces: false,
+        },
+      }),
+    )
     await page.goto(path)
     await expect(page).toHaveURL(/\/$/)
     await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible()

@@ -21,6 +21,15 @@ async function signedInHome(respond: () => Response | Promise<Response>) {
       seen.me++
       return HttpResponse.json(ME)
     }),
+    http.get(`${API}/home`, () =>
+      HttpResponse.json({
+        starred: [],
+        recent: [],
+        workspaces: [],
+        invites: [],
+        hasArchivedWorkspaces: false,
+      }),
+    ),
     http.post(`${API}/auth/logout`, ({ request }) => {
       seen.logouts.push(request.headers.get('X-CSRF-Token'))
       return respond()
