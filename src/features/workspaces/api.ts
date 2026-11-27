@@ -81,3 +81,32 @@ export const acceptInvite = (inviteId: string) =>
 
 export const declineInvite = (inviteId: string) =>
   api<void>(`/invites/${id(inviteId)}/decline`, { method: 'POST' })
+
+// Backend card #21 (agi-board-backend specs/21/contracts/invites.md): sender side, workspace admins only.
+export type SentInvite = {
+  id: string
+  email: string
+  role: 'admin' | 'member'
+  expiresAt: string
+  lastSentAt: string
+  /** Computed by the server, so the client clock never decides the status. */
+  expired: boolean
+  invitedBy: { id: string; fullName: string }
+}
+
+export type InviteRole = SentInvite['role']
+
+const invitesPath = (workspaceId: string) => `/workspaces/${id(workspaceId)}/invites`
+
+// shortcut: first 100 pending invites only; add paging when the spec gives a control for it.
+export const getSentInvites = (workspaceId: string) =>
+  api<{ items: SentInvite[]; nextCursor: string | null }>(`${invitesPath(workspaceId)}?limit=100`)
+
+export const sendInvite = (workspaceId: string, body: { email: string; role: InviteRole }) =>
+  api<SentInvite>(invitesPath(workspaceId), { method: 'POST', body: JSON.stringify(body) })
+
+export const resendInvite = (workspaceId: string, inviteId: string) =>
+  api<SentInvite>(`${invitesPath(workspaceId)}/${id(inviteId)}/resend`, { method: 'POST' })
+
+export const revokeInvite = (workspaceId: string, inviteId: string) =>
+  api<void>(`${invitesPath(workspaceId)}/${id(inviteId)}`, { method: 'DELETE' })

@@ -5,12 +5,17 @@ import {
   createWorkspace,
   declineInvite,
   getHome,
+  getSentInvites,
   getWorkspace,
+  resendInvite,
+  revokeInvite,
+  sendInvite,
   starBoard,
   unstarBoard,
   type BoardTile,
   type BoardVisibility,
   type Home,
+  type InviteRole,
 } from './api'
 
 const HOME = ['home']
@@ -93,5 +98,46 @@ export function useDeclineInvite() {
   return useMutation({
     mutationFn: declineInvite,
     onSettled: () => client.invalidateQueries({ queryKey: HOME }),
+  })
+}
+
+const invitesKey = (workspaceId: string) => ['workspaces', workspaceId, 'invites']
+
+/** WEB-05 Sent invites; only workspace admins may load it (403/404 otherwise). */
+export function useSentInvites(workspaceId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: invitesKey(workspaceId),
+    queryFn: () => getSentInvites(workspaceId),
+    select: (page) => page.items,
+    enabled,
+  })
+}
+
+// All three refetch on error too: a row revoked or accepted meanwhile then shows its real state.
+// Resend/Revoke take `onError` here, not per `mutate`: the refetch may unmount the row first, and
+// per-mutate callbacks are dropped for an unmounted observer.
+export function useSendInvite(workspaceId: string) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { email: string; role: InviteRole }) => sendInvite(workspaceId, body),
+    onSettled: () => client.invalidateQueries({ queryKey: invitesKey(workspaceId) }),
+  })
+}
+
+export function useResendInvite(workspaceId: string, onError: () => void) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (inviteId: string) => resendInvite(workspaceId, inviteId),
+    onError,
+    onSettled: () => client.invalidateQueries({ queryKey: invitesKey(workspaceId) }),
+  })
+}
+
+export function useRevokeInvite(workspaceId: string, onError: () => void) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (inviteId: string) => revokeInvite(workspaceId, inviteId),
+    onError,
+    onSettled: () => client.invalidateQueries({ queryKey: invitesKey(workspaceId) }),
   })
 }
