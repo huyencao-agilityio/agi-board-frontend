@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { BTN, FIELD, LABEL } from '@/components/common/form-styles'
 import Spinner from '@/components/common/Spinner'
@@ -26,11 +26,21 @@ const schema = z.object({
     .max(100, 'Use 100 characters or fewer.'),
 })
 
-/** WEB-D16 Create workspace, with its `Create workspace` trigger button. */
+const ENTRY = { createWorkspace: true }
+
+/**
+ * WEB-D16 Create workspace, with its `Create workspace` trigger button.
+ * Opening pushes a same-URL history entry so browser Back closes only the dialog (#349); `open` stays
+ * local so a reload never reopens it.
+ */
 export function CreateWorkspaceDialog() {
   const [open, setOpen] = useState(false)
   const create = useCreateWorkspace()
   const navigate = useNavigate()
+  const location = useLocation()
+  const atEntry = (location.state as typeof ENTRY | null)?.createWorkspace === true
+  // Not '.': on an index route that resolves to `/?index`.
+  const here = { pathname: location.pathname, search: location.search, hash: location.hash }
   const { register, handleSubmit, formState, reset } = useForm({
     resolver: zodResolver(schema),
     mode: 'onChange',
@@ -38,15 +48,37 @@ export function CreateWorkspaceDialog() {
   })
   const nameError = formState.errors.name?.message
 
+  const close = () => {
+    setOpen(false)
+    // A reopened dialog starts empty, without the banner (#237).
+    reset()
+    create.reset()
+  }
+
   const onOpenChange = (next: boolean) => {
     if (create.isPending) return // Esc, outside click and Cancel ignored while Processing
-    setOpen(next)
-    if (!next) {
-      // A reopened dialog starts empty, without the banner (#237).
-      reset()
-      create.reset()
+    if (next) {
+      setOpen(true)
+      // After a reload or Forward the current entry may already be ours: reuse it, so one Back closes.
+      navigate(here, { state: ENTRY, replace: atEntry })
+    } else {
+      close()
+      if (atEntry) navigate(-1) // drop the entry this dialog pushed
     }
   }
+
+  // Browser Back popped our entry: close, or while Processing put the entry back (Back ignored).
+  // shortcut: two quick Backs while Processing can pop past Home before the entry is restored; the
+  // History API cannot block Back, revisit only if users report it.
+  // Syncs with browser history (an external system), so closing from the effect is intended.
+  useEffect(() => {
+    if (!open || atEntry) return
+    if (create.isPending) navigate(here, { state: ENTRY })
+    // oxlint-disable-next-line react/set-state-in-effect -- history pop is external
+    else close()
+    // Deps limited to atEntry on purpose: adding `open` would close the dialog before its push lands.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [atEntry])
 
   const onSubmit = handleSubmit(({ name }) => {
     // Line breaks become spaces (#239).
@@ -56,7 +88,8 @@ export function CreateWorkspaceDialog() {
         onSuccess: (workspace) => {
           setOpen(false)
           reset()
-          navigate(`/w/${workspace.id}`)
+          // Replaces the dialog's entry, so Back from WEB-04 returns to Home without the dialog.
+          navigate(`/w/${workspace.id}`, { replace: true })
         },
       },
     )
@@ -115,8 +148,14 @@ export function CreateWorkspaceDialog() {
               className={cn(BTN, 'w-auto')}
               disabled={!formState.isValid || create.isPending}
             >
-              {create.isPending ? <Spinner /> : null}
-              <span className={cn(create.isPending && 'sr-only')}>Create</span>
+              {create.isPending ? (
+                <>
+                  <Spinner />
+                  <span className="sr-only">Creating workspace</span>
+                </>
+              ) : (
+                'Create'
+              )}
             </Button>
           </DialogFooter>
         </form>

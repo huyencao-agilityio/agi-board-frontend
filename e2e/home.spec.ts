@@ -100,3 +100,46 @@ test('a new account sees the empty state and no sidebar', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Create workspace' })).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Workspaces' })).toHaveCount(0)
 })
+
+const CREATED = { id: 'w9', name: 'Acme', role: 'admin', boardCount: 0, memberCount: 1, boards: [] }
+
+test('browser Back closes only the Create workspace dialog, also after a reload', async ({
+  page,
+}) => {
+  await signIn(page, HOME)
+  await page.goto('/')
+  const open = page.getByRole('button', { name: 'Create workspace' })
+  const dialog = page.getByRole('dialog', { name: 'Create workspace' })
+
+  await open.click()
+  await expect(page).toHaveURL(/\/$/) // same URL, no `?index`
+  await page.reload()
+  await expect(open).toBeVisible()
+  await expect(dialog).toBeHidden()
+
+  // The reloaded entry still carries the dialog state: one Back must still close it.
+  await open.click()
+  await expect(dialog).toBeVisible()
+  await page.goBack()
+  await expect(dialog).toBeHidden()
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('Back from a newly created workspace returns to Home without the dialog', async ({ page }) => {
+  await signIn(page, HOME)
+  await page.route('http://api.e2e/workspaces', (route) =>
+    route.fulfill({ status: 201, json: CREATED }),
+  )
+  await page.route('http://api.e2e/workspaces/w9', (route) => route.fulfill({ json: CREATED }))
+  await page.goto('/')
+  const dialog = page.getByRole('dialog', { name: 'Create workspace' })
+
+  await page.getByRole('button', { name: 'Create workspace' }).click()
+  await dialog.getByLabel('Workspace name').fill('Acme')
+  await dialog.getByRole('button', { name: 'Create' }).click()
+  await expect(page).toHaveURL(/\/w\/w9$/)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole('button', { name: 'Create workspace' })).toBeVisible()
+  await expect(dialog).toBeHidden()
+})
