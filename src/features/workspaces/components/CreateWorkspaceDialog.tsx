@@ -17,8 +17,14 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useCreateWorkspace } from '../hooks'
 
-// Required, trimmed, no length limit, names may repeat (WEB-D16 #231).
-const schema = z.object({ name: z.string().trim().min(1, 'Enter a workspace name.') })
+// Required, trimmed, 1–100 characters (card #6, decision #379; matches the backend DTO), names may repeat (#231).
+const schema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Enter a workspace name.')
+    .max(100, 'Use 100 characters or fewer.'),
+})
 
 /** WEB-D16 Create workspace, with its `Create workspace` trigger button. */
 export function CreateWorkspaceDialog() {

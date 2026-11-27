@@ -55,7 +55,7 @@
 ## R10. Card update 2026-11-27 (15:12 GMT+7)
 
 - **Recently viewed includes starred boards** (AC 2): the two lists are independent. `useToggleStar` already leaves `recent` in place and only flips `starred` on every copy of the tile; a test covers AC 2.2.
-- **Workspace name 1–100 characters** (AC 1.3): the server refuses longer names with 400 `VALIDATION_FAILED`, and the dialog shows its generic banner `Something went wrong. Try again.` with the name kept, so the workspace is not created. There is no client-side limit or dedicated message, because WEB-D16 still says "no length limit" (#231) and has no wording for it. Open: record a UI decision and message through the pipeline if a live check is wanted.
+- **Workspace name 1–100 characters** (AC 1.3): the dialog schema has `.max(100, 'Use 100 characters or fewer.')`, so a longer name shows the inline error, gets a red border, and keeps `Create` disabled; no request is sent. The wording was chosen by the user and recorded as UI decision #379 (WEB-D16 spec, spec-kit 029, mockup state `Name too long`), after the PR #19 review. The server's 400 still falls back to the generic banner.
 
 ## Risks
 

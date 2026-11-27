@@ -59,4 +59,4 @@ Derived during render (no `useState` copies):
 
 ## Validation
 
-- Workspace name: `z.string().trim().min(1, 'Enter a workspace name.')`. The card allows 1–100 characters; the server enforces the maximum (400 → generic banner, research R10), since WEB-D16 has no wording for it. Line breaks become spaces before submitting (#239).
+- Workspace name: `z.string().trim().min(1, 'Enter a workspace name.').max(100, 'Use 100 characters or fewer.')` (card AC 1.3, decision #379, same limit as the backend DTO). Line breaks become spaces before submitting (#239).

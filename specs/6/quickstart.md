@@ -34,7 +34,7 @@ pnpm e2e                                   # e2e/home.spec.ts (routes + Workspac
 ### Added after the card update (2026-11-27)
 
 - Starring a board shown in `Recently viewed` keeps it there, and it also appears in `Starred boards` (AC 2.2).
-- `POST /workspaces` returning 400 for a 101-character name shows the generic banner, and the dialog stays open (AC 1.3).
+- A 101-character name shows `Use 100 characters or fewer.` under the field, `Create` stays disabled and no request is sent; 100 characters are accepted (AC 1.3, decision #379).
 - A tile with `backgroundThumbnailUrl` shows the image; without one, the band is filled with `backgroundColor` (AC 9).
 - The sidebar `Home` link goes to `/` and is highlighted only on Home (#378).
 

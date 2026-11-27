@@ -253,23 +253,48 @@ describe('HomePage Create workspace (US2)', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('does not create a name the server refuses as too long (AC 1.3)', async () => {
-    let created = 0
+  it('refuses a name over 100 characters on the client (AC 1.3, decision #379)', async () => {
+    let posts = 0
     serveHome(home())
     server.use(
       http.post(`${API}/workspaces`, () => {
-        created++
-        return fail(400, 'VALIDATION_FAILED')
+        posts++
+        return HttpResponse.json(workspace('w7', 'x'), { status: 201 })
+      }),
+    )
+    const { user } = renderHome()
+    await user.click(await screen.findByRole('button', { name: 'Create workspace' }))
+    const field = screen.getByLabelText('Workspace name')
+    await user.click(field)
+    await user.paste('x'.repeat(101))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Use 100 characters or fewer.')
+    expect(field).toHaveAttribute('aria-invalid', 'true')
+    const create = screen.getByRole('button', { name: 'Create' })
+    expect(create).toBeDisabled()
+    await user.keyboard('{Enter}')
+    expect(posts).toBe(0)
+
+    await user.keyboard('{Backspace}')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(create).toBeEnabled()
+  })
+
+  it('accepts exactly 100 characters after trimming', async () => {
+    const seen: unknown[] = []
+    serveHome(home())
+    server.use(
+      http.post(`${API}/workspaces`, async ({ request }) => {
+        seen.push(await request.json())
+        return HttpResponse.json(workspace('w7', 'x'), { status: 201 })
       }),
     )
     const { user } = renderHome()
     await user.click(await screen.findByRole('button', { name: 'Create workspace' }))
     await user.click(screen.getByLabelText('Workspace name'))
-    await user.paste('x'.repeat(101))
+    await user.paste(`  ${'x'.repeat(100)}  `)
     await user.click(screen.getByRole('button', { name: 'Create' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC)
-    expect(screen.getByRole('dialog', { name: 'Create workspace' })).toBeInTheDocument()
-    expect(created).toBe(1)
+    expect(await screen.findByText('at /w/w7')).toBeInTheDocument()
+    expect(seen).toEqual([{ name: 'x'.repeat(100) }])
   })
 
   it('shows the banner on failure, keeps the name, and clears it on edit and on reopen', async () => {
