@@ -16,3 +16,8 @@ afterEach(() => {
   cleanup()
 })
 afterAll(() => server.close())
+
+// jsdom lacks the pointer-capture and scroll APIs Radix Select calls when it opens.
+Element.prototype.hasPointerCapture ??= () => false
+Element.prototype.releasePointerCapture ??= () => {}
+Element.prototype.scrollIntoView ??= () => {}

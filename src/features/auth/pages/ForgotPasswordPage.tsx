@@ -7,7 +7,7 @@ import Spinner from '@/components/common/Spinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { BTN, FIELD, LABEL, LINK } from '@/components/common/form-styles'
-import { emailSchema } from '@/features/auth/email-schema'
+import { emailSchema } from '@/lib/email-schema'
 import { useForgotPassword } from '@/features/auth/hooks'
 import { MESSAGES } from '@/features/auth/messages'
 
