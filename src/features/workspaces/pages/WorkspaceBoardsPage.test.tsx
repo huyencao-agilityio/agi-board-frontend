@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, it } from 'vitest'
@@ -114,5 +115,29 @@ describe('WorkspaceBoardsPage', () => {
     renderPage()
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+})
+
+describe('WorkspaceBoardsPage Create new board tile (#23)', () => {
+  it('shows the tile to the workspace admin instead of the empty line', async () => {
+    serve({ ...WORKSPACE, role: 'admin', boardCount: 0, boards: [] })
+    renderPage()
+    expect(await screen.findByRole('button', { name: 'Create new board' })).toBeInTheDocument()
+    expect(screen.queryByText('No boards yet.')).not.toBeInTheDocument()
+  })
+
+  it('opens Create board with the workspace name read-only', async () => {
+    serve({ ...WORKSPACE, role: 'admin' })
+    renderPage()
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Create new board' }))
+    const dialog = screen.getByRole('dialog', { name: 'Create board' })
+    expect(within(dialog).getByRole('textbox', { name: 'Workspace' })).toHaveValue('Team')
+  })
+
+  it('shows no tile to an ordinary member', async () => {
+    serve(WORKSPACE)
+    renderPage()
+    expect(await screen.findByRole('link', { name: 'alpha' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Create new board' })).not.toBeInTheDocument()
   })
 })
