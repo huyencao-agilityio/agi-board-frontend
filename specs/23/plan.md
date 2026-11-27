@@ -36,15 +36,15 @@ The dialog follows the existing `CreateWorkspaceDialog` pattern (shadcn `Dialog`
 
 `.specify/memory/constitution.md` is an unfilled template, so the gates are `AGENTS.md` and `.claude/rules/`.
 
-| Gate | Status |
-| --- | --- |
-| Feature layout; no cross-feature internals | PASS: dialog, API and hook live in `features/workspaces/` where both tiles are (R1) |
-| Requests through `api()` + TanStack Query | PASS: `createBoard` in `workspaces/api.ts`, `useCreateBoard` in `workspaces/hooks.ts` |
-| Labels verbatim | PASS: from 019 / WEB-D01 / mockup; tooltip text is (proposed) and recorded in spec Clarifications |
-| Permissions server-side; client only hides | PASS: tile shown only when `role === 'admin'`; 404 / any failure → banner |
-| No out-of-scope features | PASS: no workspace picker, no workspace dropdown, no templates, no background picker |
-| `src/components/ui/` generated only | PASS: `tooltip.tsx` added with `pnpm dlx shadcn@latest add tooltip`, not hand-written |
-| Colors via tokens | PASS: tile and banner reuse existing token classes |
+| Gate                                       | Status                                                                                            |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Feature layout; no cross-feature internals | PASS: dialog, API and hook live in `features/workspaces/` where both tiles are (R1)               |
+| Requests through `api()` + TanStack Query  | PASS: `createBoard` in `workspaces/api.ts`, `useCreateBoard` in `workspaces/hooks.ts`             |
+| Labels verbatim                            | PASS: from 019 / WEB-D01 / mockup; tooltip text is (proposed) and recorded in spec Clarifications |
+| Permissions server-side; client only hides | PASS: tile shown only when `role === 'admin'`; 404 / any failure → banner                         |
+| No out-of-scope features                   | PASS: no workspace picker, no workspace dropdown, no templates, no background picker              |
+| `src/components/ui/` generated only        | PASS: `tooltip.tsx` added with `pnpm dlx shadcn@latest add tooltip`, not hand-written             |
+| Colors via tokens                          | PASS: tile and banner reuse existing token classes                                                |
 
 Re-check after Phase 1: PASS; Complexity Tracking empty.
 
